@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:jaykmody.com)",
+      "WebFetch(domain:developer.nvidia.com)",
+      "WebFetch(domain:research.google)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:leimao.github.io)",
+      "WebFetch(domain:blog.speechmatics.com)",
+      "WebFetch(domain:openreview.net)",
+      "WebFetch(domain:ki-seki.github.io)",
+      "WebFetch(domain:machinelearningmastery.com)",
+      "WebFetch(domain:veryunknown.com)",
+      "WebFetch(domain:docs.vllm.ai)",
+      "WebFetch(domain:pramodith.github.io)",
+      "WebFetch(domain:blog.codingconfessions.com)",
+      "WebFetch(domain:magazine.sebastianraschka.com)",
+      "WebFetch(domain:docs.pytorch.org)",
+      "WebFetch(domain:adiganesh.com)",
+      "WebFetch(domain:philkrav.com)",
+      "Bash(python:*)"
+    ]
+  }
+}
