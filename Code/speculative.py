@@ -39,7 +39,10 @@ def _get_cache_seq_len(past_key_values) -> int:
     """Return the current sequence length stored in the KV-cache."""
     if past_key_values is None:
         return 0
-    # DynamicCache (transformers >= 4.36)
+    # DynamicCache with get_seq_length method (transformers >= 5.0)
+    if hasattr(past_key_values, "get_seq_length"):
+        return past_key_values.get_seq_length()
+    # DynamicCache with key_cache attribute (transformers 4.36–4.x)
     if hasattr(past_key_values, "key_cache"):
         if len(past_key_values.key_cache) == 0:
             return 0
@@ -52,7 +55,7 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
     """
     Trim KV-cache to keep only the first *target_seq_len* positions.
 
-    Supports both DynamicCache and legacy tuple-of-tuples formats.
+    Supports DynamicCache (transformers 5.x and 4.x) and legacy tuple-of-tuples.
     Returns the trimmed cache (modifies in-place for DynamicCache).
     """
     if past_key_values is None:
@@ -62,7 +65,12 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
     if current_len <= target_seq_len:
         return past_key_values
 
-    # DynamicCache
+    # DynamicCache with crop method (transformers >= 5.0)
+    if hasattr(past_key_values, "crop"):
+        past_key_values.crop(target_seq_len)
+        return past_key_values
+
+    # DynamicCache with key_cache attribute (transformers 4.36–4.x)
     if hasattr(past_key_values, "key_cache"):
         for layer_idx in range(len(past_key_values.key_cache)):
             past_key_values.key_cache[layer_idx] = (
@@ -221,29 +229,22 @@ def _verify_step(
         target_cache = out.past_key_values
         all_logits = out.logits  # (1, num_new_tokens, vocab_size)
 
-        # The logits correspond to predictions for positions new_start .. total_len-1.
-        # We need the target's distribution at each draft-token position.
+        # The logits correspond to predictions for the NEXT token at each position.
+        # With cache of length L, new input tokens are at positions L, L+1, ...
+        # logits[j] (at position L+j) predicts the token at position L+j+1.
+        # Without cache (L=0), logits[j] at position j predicts token at j+1.
         #
-        # If new_start > 0 (using cache): logits index 0 predicts position new_start,
-        #   so the logits for draft token i (which is at position
-        #   (prefix_without_draft) + i) map to logits index = i + offset
-        # If new_start == 0: logits index j predicts position j+1's token,
-        #   so the logits predicting draft token i are at index
-        #   (prefix_without_draft - 1 + i)
+        # To verify draft token i at position (prefix_without_draft + i),
+        # we need logits that predict that position, i.e. logits at position
+        # (prefix_without_draft + i - 1). The logits index is:
+        #   (prefix_without_draft + i - 1) - new_start
 
         # Number of tokens before the draft tokens
         prefix_without_draft = prefix_ids.shape[1] - gamma
 
-        if new_start > 0:
-            # With cache: logits[0] predicts token at position new_start
-            # draft token i is at position (prefix_without_draft + i)
-            # its logits are at index (prefix_without_draft + i) - new_start
-            logit_offset = prefix_without_draft - new_start
-        else:
-            # No cache: logits[j] predicts token at position j+1
-            # draft token i is at position (prefix_without_draft + i)
-            # its logits are at index (prefix_without_draft + i - 1)
-            logit_offset = prefix_without_draft - 1
+        # Unified formula: works for both cached (new_start > 0) and
+        # uncached (new_start == 0) cases.
+        logit_offset = prefix_without_draft - new_start - 1
 
         # --- Rejection sampling ---
         accepted_tokens: List[int] = []
@@ -292,10 +293,13 @@ def _verify_step(
                 accepted_tokens.append(bonus_tok)
                 bonus = True
 
-        # Trim target cache to match the actual accepted length
-        # Accepted tokens end at position: prefix_without_draft + len(accepted_tokens) - 1
-        # Cache should contain entries up to that position
-        keep_len = prefix_without_draft + len(accepted_tokens)
+        # Trim target cache to keep only positions with valid KV entries.
+        # The model processed prefix_without_draft + gamma input tokens,
+        # so the cache has that many entries. We keep only the prefix plus
+        # the num_accepted draft tokens (whose KV is correct). Bonus and
+        # correction tokens were never in the model input, so their KV
+        # will be computed in the next round.
+        keep_len = prefix_without_draft + num_accepted
         target_cache = _trim_kv_cache(target_cache, keep_len)
 
     return {
@@ -435,7 +439,7 @@ def speculative_decode(
         accepted_tokens = verify_result["accepted_tokens"]
         num_accepted = verify_result["num_accepted"]
         target_cache = verify_result["target_cache"]
-        target_cache_len = current_len + len(accepted_tokens)
+        target_cache_len = current_len + verify_result["num_accepted"]
         verify_ms = verify_result["elapsed_ms"]
 
         # Append accepted tokens

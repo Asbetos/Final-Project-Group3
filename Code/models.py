@@ -46,7 +46,7 @@ def load_model(
 
     load_kwargs = dict(
         trust_remote_code=True,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
     )
 
     if quantize_4bit:
