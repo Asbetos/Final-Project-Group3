@@ -57,12 +57,14 @@ def load_model(
             bnb_4bit_use_double_quant=True,
         )
         load_kwargs["quantization_config"] = bnb_config
-        load_kwargs["device_map"] = "auto"
-    else:
-        load_kwargs["device_map"] = "auto"
+        load_kwargs["device_map"] = {"": device}
 
     logger.info("Loading model %s (4-bit=%s) ...", model_id, quantize_4bit)
     model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
+
+    if not quantize_4bit:
+        model = model.to(device=device, dtype=torch.float16)
+
     model.eval()
 
     vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
