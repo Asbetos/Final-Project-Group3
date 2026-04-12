@@ -101,6 +101,7 @@ class Eagle3DraftHead(nn.Module):
         self.embed_tokens = target_model.model.embed_tokens
         self.norm = target_model.model.norm
         self.lm_head = target_model.lm_head
+        self.rotary_emb = target_model.model.rotary_emb
 
         # Freeze shared components
         for p in self.embed_tokens.parameters():
@@ -140,17 +141,20 @@ class Eagle3DraftHead(nn.Module):
         # Combine token embedding with fused target features
         combined = self.input_fc(torch.cat([token_emb, fused_hidden], dim=-1))  # (B, S, H)
 
+        # Compute RoPE position embeddings (cos, sin) from position_ids
+        position_embeddings = self.rotary_emb(combined, position_ids)
+
         # Run through single decoder layer
-        # Qwen3 decoder layer expects: (hidden_states, position_ids=..., past_key_value=..., use_cache=...)
         layer_out = self.decoder_layer(
             combined,
             position_ids=position_ids,
+            position_embeddings=position_embeddings,
             past_key_value=past_key_values,
             use_cache=use_cache,
         )
 
         hidden_state = layer_out[0]  # (B, S, H)
-        new_kv = layer_out[1] if use_cache and len(layer_out) > 1 else None
+        new_kv = layer_out[2] if use_cache and len(layer_out) > 2 else None
 
         # Project to vocabulary (frozen)
         normed = self.norm(hidden_state)
@@ -265,7 +269,7 @@ def build_draft_tree(
             cum_logprob=top_k_vals[i].item(),
             draft_probs=probs_0.clone(),
             draft_hidden=hidden[:, -1:, :].clone(),
-            draft_kv=kv,
+            draft_kv=copy.deepcopy(kv),
         ))
 
     if len(tree_nodes) >= config.tree_budget:
@@ -329,7 +333,7 @@ def build_draft_tree(
                     cum_logprob=leaf_node.cum_logprob + top_vals[i].item(),
                     draft_probs=probs_leaf.clone(),
                     draft_hidden=hidden_d[:, -1:, :].clone(),
-                    draft_kv=kv_d,
+                    draft_kv=copy.deepcopy(kv_d),
                 ))
 
     return tree_nodes
@@ -389,9 +393,10 @@ def build_tree_attention_mask(
             mask[0, 0, i, prefix_len + parent] = 0.0
             parent = tree_nodes[parent].parent_idx
 
-    # Position IDs: prefix_len + depth (siblings share position for correct RoPE)
+    # Position IDs: (prefix_len - 1) + depth (siblings share position for correct RoPE)
+    # prefix_len includes the root token, so depth-1 nodes are at prefix_len - 1 + 1 = prefix_len
     position_ids = torch.tensor(
-        [[prefix_len + node.depth for node in tree_nodes]],
+        [[prefix_len - 1 + node.depth for node in tree_nodes]],
         device=device,
         dtype=torch.long,
     )
@@ -472,6 +477,7 @@ def verify_tree(
     prefix_len: int,
     temperature: float,
     generator: torch.Generator = None,
+    prefix_logits: torch.Tensor = None,
 ) -> Tuple[List[int], int, List[bool], List[int]]:
     """
     Verify tree candidates against target model logits.
@@ -484,6 +490,8 @@ def verify_tree(
         prefix_len: length of the prefix for position calculations
         temperature: sampling temperature
         generator: optional torch generator
+        prefix_logits: (V,) logits from target model at root token position,
+            used to verify root children (depth-1 nodes)
 
     Returns:
         (accepted_tokens, num_accepted, per_token_accepted, accepted_cache_indices)
@@ -563,14 +571,37 @@ def verify_tree(
             # For step=0 (root child), we need external prefix logits.
 
             if step == 0:
-                # Root child: can't verify from tree_logits alone.
-                # The caller (eagle3_decode) verifies root children using the
-                # target logits from the feature extraction step.
-                # Here we just accept it (it will be verified externally).
-                accepted_tokens.append(node.token_id)
-                per_token.append(True)
-                num_acc += 1
-                continue
+                # Root child: verify using prefix_logits (target's prediction at root position)
+                if prefix_logits is not None:
+                    if temperature == 0.0:
+                        p_probs = torch.zeros_like(prefix_logits)
+                        p_probs[prefix_logits.argmax()] = 1.0
+                    else:
+                        p_probs = F.softmax(prefix_logits / temperature, dim=-1)
+
+                    accepted, token = rejection_sample_token(
+                        p_probs,
+                        node.draft_probs,
+                        node.token_id,
+                        temperature,
+                        generator,
+                    )
+
+                    if accepted:
+                        accepted_tokens.append(node.token_id)
+                        per_token.append(True)
+                        num_acc += 1
+                    else:
+                        accepted_tokens.append(token)
+                        per_token.append(False)
+                        break
+                    continue
+                else:
+                    # No prefix logits provided — accept unconditionally (legacy fallback)
+                    accepted_tokens.append(node.token_id)
+                    per_token.append(True)
+                    num_acc += 1
+                    continue
 
             # Verify this node using parent's target logits
             parent_node_idx = path[step - 1]
@@ -730,7 +761,7 @@ def eagle3_decode(
     ttft_recorded = False
 
     # Save and restore attention implementation for tree verification
-    original_attn_impl = getattr(target_model.config, "_attn_implementation", "flash_attention_2")
+    original_attn_impl = getattr(target_model.config, "_attn_implementation", "sdpa")
 
     while len(generated_ids) < max_new_tokens:
         round_start = time.perf_counter()
@@ -905,12 +936,16 @@ def eagle3_decode(
         tree_cache = tree_out.past_key_values
 
         # ---- Step 4: Verify tree candidates ----
+        # root_out.logits[0, -1, :] are the target's predictions after the root token,
+        # used to verify root children (depth-1 nodes)
+        root_prefix_logits = root_out.logits[0, -1, :]
         accepted_tokens_tree, num_accepted_tree, per_token, accepted_indices = verify_tree(
             tree_logits,
             tree_nodes,
             current_len + 1,  # prefix includes root
             temperature,
             generator,
+            prefix_logits=root_prefix_logits,
         )
 
         # The root token is always accepted (it came from the target model)

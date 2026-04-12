@@ -191,8 +191,34 @@ def save_summary_csv(
     """Append one summary row to the master CSV. Creates the file and header if needed."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     file_exists = os.path.isfile(path)
-    with open(path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(row.keys()))
-        if not file_exists:
+
+    if file_exists:
+        # Read existing header to merge with new row's keys
+        with open(path, "r", newline="") as f:
+            reader = csv.reader(f)
+            existing_fields = next(reader, [])
+        # Merge: keep existing order, append any new columns
+        all_fields = list(existing_fields)
+        for key in row.keys():
+            if key not in all_fields:
+                all_fields.append(key)
+        # If new columns were added, rewrite the file with the updated header
+        if len(all_fields) > len(existing_fields):
+            with open(path, "r", newline="") as f:
+                reader = csv.DictReader(f)
+                existing_rows = list(reader)
+            with open(path, "w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=all_fields, extrasaction="ignore")
+                writer.writeheader()
+                for existing_row in existing_rows:
+                    writer.writerow(existing_row)
+                writer.writerow(row)
+        else:
+            with open(path, "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=all_fields, extrasaction="ignore")
+                writer.writerow(row)
+    else:
+        with open(path, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=list(row.keys()))
             writer.writeheader()
-        writer.writerow(row)
+            writer.writerow(row)

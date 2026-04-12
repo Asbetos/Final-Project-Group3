@@ -461,8 +461,9 @@ def speculative_decode(
         draft_cache = _trim_kv_cache(draft_cache, draft_keep_len)
         draft_cache_len = draft_keep_len
 
-        # Append accepted tokens
-        generated_ids.extend(accepted_tokens)
+        # Append accepted tokens, clamping to max_new_tokens
+        remaining = max_new_tokens - len(generated_ids)
+        generated_ids.extend(accepted_tokens[:remaining])
 
         if not ttft_recorded and accepted_tokens:
             ttft_ms = (time.perf_counter() - wall_start) * 1000.0

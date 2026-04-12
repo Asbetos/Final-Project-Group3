@@ -54,8 +54,8 @@ def load_model(
 
     load_kwargs = dict(
         trust_remote_code=True,
-        dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
+        torch_dtype=torch.bfloat16,
+        attn_implementation="sdpa",
     )
 
     if quantize_4bit:
@@ -76,8 +76,9 @@ def load_model(
 
     model.eval()
 
-    # torch.compile with reduce-overhead for inference (uses CUDA graphs)
-    if compile_model:
+    # torch.compile disabled — CUDA graphs conflict with dynamic KV cache
+    # in transformers 5.x + PyTorch 2.4. SDPA on A100 is already fast.
+    if False and compile_model:
         logger.info("Compiling model %s with torch.compile ...", model_id)
         model = torch.compile(model, mode="reduce-overhead")
 
@@ -162,8 +163,8 @@ def load_eagle3_pair(pair: Eagle3PairConfig):
 
     draft_head.eval()
 
-    # Compile draft head for inference
-    draft_head = torch.compile(draft_head, mode="reduce-overhead")
+    # torch.compile disabled — see note in load_model()
+    # draft_head = torch.compile(draft_head, mode="reduce-overhead")
 
     total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
     logger.info("EAGLE-3 pair %s loaded. Total VRAM: %.2f GB", pair.pair_id, total_vram)

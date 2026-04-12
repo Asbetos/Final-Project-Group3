@@ -224,19 +224,25 @@ def compute_multi_step_loss(
     # Steps 1..K: autoregressive with draft head's own hidden state
     current_hidden = draft_hidden.detach()  # detach to prevent backprop through all steps at once
     weight = config.step_decay
+    # Track cumulative offset into the original sequence for target logit alignment
+    cumulative_offset = 0
 
     for step in range(1, config.multi_step_k):
-        if S < step + 2:
+        if current_hidden.shape[1] < 2:
             break
 
         # Use draft head's own prediction as next input token
         with torch.no_grad():
-            pred_tokens = draft_logits.argmax(dim=-1)  # (B, S-1)
+            pred_tokens = draft_logits.argmax(dim=-1)
 
-        # Shift: predict position step+1 .. S-1 using draft hidden from step .. S-2
-        step_ids = pred_tokens[:, step:]  # (B, S-1-step)
-        step_features = current_hidden[:, step:, :]  # (B, S-1-step, H)
-        step_positions = torch.arange(step, S - 1, device=device).unsqueeze(0).expand(B, -1)
+        # Always slice at offset 1 from current (already-shrunk) tensors
+        step_ids = pred_tokens[:, 1:]
+        step_features = current_hidden[:, 1:, :]
+        cumulative_offset += 1
+        step_positions = torch.arange(
+            cumulative_offset, cumulative_offset + step_ids.shape[1],
+            device=device,
+        ).unsqueeze(0).expand(B, -1)
 
         draft_logits_k, draft_hidden_k, _ = draft_head(
             token_ids=step_ids,
@@ -246,10 +252,16 @@ def compute_multi_step_loss(
             use_cache=False,
         )
 
-        target_dist_k = F.log_softmax(target_logits[:, step:-1, :], dim=-1)
-        draft_dist_k = F.log_softmax(draft_logits_k, dim=-1)
+        # Align target logits: predict positions (cumulative_offset+1) .. (S-1)
+        target_dist_k = F.log_softmax(
+            target_logits[:, cumulative_offset:-1, :], dim=-1
+        )
+        # Trim draft to match target length (target may be shorter)
+        min_len = min(draft_logits_k.shape[1], target_dist_k.shape[1])
+        draft_dist_k = F.log_softmax(draft_logits_k[:, :min_len, :], dim=-1)
+        target_dist_k = target_dist_k[:, :min_len, :]
 
-        mask_k = attention_mask[:, step + 1:].float()
+        mask_k = attention_mask[:, cumulative_offset + 1:cumulative_offset + 1 + min_len].float()
         kl_step_k = F.kl_div(draft_dist_k, target_dist_k.exp(), reduction="none").sum(-1)
         kl_step_k = (kl_step_k * mask_k).sum() / mask_k.sum().clamp(min=1)
 
