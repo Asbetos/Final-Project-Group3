@@ -11,6 +11,7 @@ Key components:
   - eagle3_decode: main generation loop
 """
 
+import copy
 import logging
 import time
 from dataclasses import dataclass, field
