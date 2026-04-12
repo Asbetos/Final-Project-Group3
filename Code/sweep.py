@@ -89,6 +89,11 @@ def parse_args() -> argparse.Namespace:
     )
     # EAGLE-3 arguments
     parser.add_argument(
+        "--eagle3-only",
+        action="store_true",
+        help="Run only EAGLE-3 experiments (skip standard pairs)",
+    )
+    parser.add_argument(
         "--eagle3",
         action="store_true",
         help="Run EAGLE-3 experiments",
@@ -183,21 +188,22 @@ def main():
     os.makedirs(os.path.join(args.output_dir, "speculative"), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, "eagle3"), exist_ok=True)
 
-    # Run standard speculative decoding pair by pair
-    for pair in pairs:
-        logger.info("=" * 70)
-        logger.info("Starting pair %s", pair.pair_id)
-        logger.info("=" * 70)
-        run_pair_sweep(
-            pair,
-            gammas=args.gammas,
-            temperatures=args.temps,
-            tasks=args.tasks,
-            max_new_tokens=args.max_tokens,
-            num_prompts=args.num_prompts,
-            seed=args.seed,
-            output_dir=args.output_dir,
-        )
+    # Run standard speculative decoding pair by pair (skip if --eagle3-only)
+    if not getattr(args, 'eagle3_only', False):
+        for pair in pairs:
+            logger.info("=" * 70)
+            logger.info("Starting pair %s", pair.pair_id)
+            logger.info("=" * 70)
+            run_pair_sweep(
+                pair,
+                gammas=args.gammas,
+                temperatures=args.temps,
+                tasks=args.tasks,
+                max_new_tokens=args.max_tokens,
+                num_prompts=args.num_prompts,
+                seed=args.seed,
+                output_dir=args.output_dir,
+            )
 
     # Run EAGLE-3 experiments if requested
     if args.eagle3:

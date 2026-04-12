@@ -1,0 +1,18 @@
+2026-04-12 20:44:05,518 [INFO] __main__: GPU: NVIDIA A100-SXM4-80GB (compute capability 8.0)
+2026-04-12 20:44:05,520 [INFO] __main__: Experiment grid: 3 pairs x 5 gammas x 3 temps x 4 tasks = 180 speculative + 36 baseline = 216 total configs
+2026-04-12 20:44:07,258 [INFO] __main__: ======================================================================
+2026-04-12 20:44:07,258 [INFO] __main__: Starting pair A
+2026-04-12 20:44:07,258 [INFO] __main__: ======================================================================
+2026-04-12 20:44:07,258 [INFO] runner: Pair A: 60 speculative configs + baselines
+2026-04-12 20:44:07,259 [INFO] models: Loading model pair A ...
+2026-04-12 20:44:07,730 [INFO] models: Loading model Qwen/Qwen3-8B (4-bit=False) ...
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00, 78.67it/s]
+2026-04-12 20:44:11,813 [INFO] models: Model Qwen/Qwen3-8B loaded. VRAM allocated: 15.26 GB
+2026-04-12 20:44:11,813 [INFO] models: Loading model Qwen/Qwen3-0.6B (4-bit=False) ...
+2026-04-12 20:44:12,167 [INFO] models: Model Qwen/Qwen3-0.6B loaded. VRAM allocated: 16.37 GB
+2026-04-12 20:44:12,168 [INFO] models: Pair A loaded. Target VRAM: 15.26 GB, Total VRAM: 16.37 GB
+2026-04-12 20:44:12,168 [INFO] data: Loading dataset for task 'humaneval' ...
+Generating test split:   0%|          | 0/164 [00:00<?, ? examples/s]Generating test split: 100%|██████████| 164/164 [00:00<00:00, 17319.18 examples/s]
+2026-04-12 20:44:12,641 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-12 20:44:12,695 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-12 20:44:12,695 [INFO] runner: Running baseline: A_humaneval_baseline_t0.0

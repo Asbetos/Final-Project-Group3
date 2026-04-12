@@ -1,0 +1,58 @@
+2026-04-12 20:21:38,237 [INFO] __main__: Training on: NVIDIA A100-SXM4-80GB
+2026-04-12 20:21:38,238 [INFO] __main__: Loading target model: Qwen/Qwen3-8B
+2026-04-12 20:21:38,238 [INFO] models: Loading model Qwen/Qwen3-8B (4-bit=False) ...
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00, 72.23it/s]
+2026-04-12 20:21:42,540 [INFO] models: Model Qwen/Qwen3-8B loaded. VRAM allocated: 15.26 GB
+2026-04-12 20:21:43,709 [INFO] __main__: Draft head created: 276832512 trainable params (276.8 M)
+2026-04-12 20:21:46,571 [INFO] __main__: Loaded checkpoint: /workspace/eagle3_checkpoints/eagle3_step624.pt (step=624, epoch=1)
+2026-04-12 20:21:46,654 [INFO] __main__: Loading Alpaca dataset ...
+2026-04-12 20:21:51,401 [INFO] __main__: Prepared 5000 training examples
+2026-04-12 20:21:51,403 [INFO] __main__: Starting training ...
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+huggingface/tokenizers: The current process just got forked, after parallelism has already been used. Disabling parallelism to avoid deadlocks...
+To disable this warning, you can either:
+	- Avoid using `tokenizers` before the fork if possible
+	- Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+2026-04-12 20:22:46,700 [INFO] __main__: Epoch 1, step 10/312, loss=2.6274, lr=4.84e-05
+2026-04-12 20:23:24,650 [INFO] __main__: Epoch 1, step 20/312, loss=2.5861, lr=9.68e-05
+2026-04-12 20:24:02,825 [INFO] __main__: Epoch 1, step 30/312, loss=2.6438, lr=1.45e-04
+2026-04-12 20:24:40,365 [INFO] __main__: Epoch 1, step 40/312, loss=2.6589, lr=1.94e-04
+2026-04-12 20:25:23,403 [INFO] __main__: Epoch 1, step 50/312, loss=2.8339, lr=2.42e-04
+2026-04-12 20:26:02,180 [INFO] __main__: Epoch 1, step 60/312, loss=2.9968, lr=2.90e-04
+2026-04-12 20:26:40,964 [INFO] __main__: Epoch 1, step 70/312, loss=3.1873, lr=2.99e-04
+2026-04-12 20:27:18,279 [INFO] __main__: Epoch 1, step 80/312, loss=3.3588, lr=2.96e-04
+2026-04-12 20:27:55,490 [INFO] __main__: Epoch 1, step 90/312, loss=3.4312, lr=2.91e-04
+2026-04-12 20:28:32,763 [INFO] __main__: Epoch 1, step 100/312, loss=3.2732, lr=2.83e-04
+2026-04-12 20:29:10,030 [INFO] __main__: Epoch 1, step 110/312, loss=3.2395, lr=2.74e-04
+2026-04-12 20:29:47,215 [INFO] __main__: Epoch 1, step 120/312, loss=3.6998, lr=2.62e-04
+2026-04-12 20:30:23,848 [INFO] __main__: Epoch 1, step 130/312, loss=3.3292, lr=2.48e-04
+2026-04-12 20:31:00,707 [INFO] __main__: Epoch 1, step 140/312, loss=3.3783, lr=2.34e-04
+2026-04-12 20:31:37,569 [INFO] __main__: Epoch 1, step 150/312, loss=3.4164, lr=2.17e-04
+2026-04-12 20:32:14,835 [INFO] __main__: Epoch 1, step 160/312, loss=3.0559, lr=2.00e-04
+2026-04-12 20:32:56,010 [INFO] __main__: Epoch 1, step 170/312, loss=3.0696, lr=1.82e-04
+2026-04-12 20:33:34,696 [INFO] __main__: Epoch 1, step 180/312, loss=3.0346, lr=1.63e-04
+2026-04-12 20:34:11,593 [INFO] __main__: Epoch 1, step 190/312, loss=2.9818, lr=1.44e-04
+2026-04-12 20:34:48,857 [INFO] __main__: Epoch 1, step 200/312, loss=2.8122, lr=1.26e-04
+2026-04-12 20:35:24,920 [INFO] __main__: Epoch 1, step 210/312, loss=2.8388, lr=1.07e-04
+2026-04-12 20:36:02,566 [INFO] __main__: Epoch 1, step 220/312, loss=2.6814, lr=8.96e-05
+2026-04-12 20:36:39,548 [INFO] __main__: Epoch 1, step 230/312, loss=2.5241, lr=7.28e-05
+2026-04-12 20:37:16,259 [INFO] __main__: Epoch 1, step 240/312, loss=2.5524, lr=5.73e-05
+2026-04-12 20:37:47,758 [INFO] __main__: Epoch 1, step 250/312, loss=2.5028, lr=4.33e-05
+2026-04-12 20:38:25,925 [INFO] __main__: Epoch 1, step 260/312, loss=2.6172, lr=3.09e-05
+2026-04-12 20:39:04,439 [INFO] __main__: Epoch 1, step 270/312, loss=2.4457, lr=2.04e-05
+2026-04-12 20:39:42,734 [INFO] __main__: Epoch 1, step 280/312, loss=2.6007, lr=1.20e-05
+2026-04-12 20:40:20,286 [INFO] __main__: Epoch 1, step 290/312, loss=2.3826, lr=5.70e-06
+2026-04-12 20:40:58,485 [INFO] __main__: Epoch 1, step 300/312, loss=2.4456, lr=1.70e-06
+2026-04-12 20:41:36,632 [INFO] __main__: Epoch 1, step 310/312, loss=2.3915, lr=4.74e-08
+2026-04-12 20:41:46,110 [INFO] __main__: Epoch 1 complete. Avg loss=2.8854, Time=1193.7s
