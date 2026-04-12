@@ -5,6 +5,8 @@ from typing import List, Optional, Tuple
 import json
 import os
 
+_CODE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 @dataclass
 class ModelPairConfig:
@@ -171,11 +173,16 @@ class Eagle3ExperimentConfig:
 
 # Pre-built EAGLE-3 pair definitions
 
+_DEFAULT_CKPT = os.environ.get(
+    "EAGLE3_CHECKPOINT",
+    os.path.join(_CODE_DIR, "checkpoints", "eagle3", "eagle3_final.pt"),
+)
+
 EAGLE3_PAIR_D = Eagle3PairConfig(
     pair_id="D",
     target_model_id="Qwen/Qwen3-8B",
     target_quantize_4bit=False,
-    checkpoint_path="checkpoints/eagle3/eagle3_final.pt",
+    checkpoint_path=_DEFAULT_CKPT,
     target_vram_estimate_gb=16.7,
 )
 
@@ -183,7 +190,7 @@ EAGLE3_PAIR_E = Eagle3PairConfig(
     pair_id="E",
     target_model_id="Qwen/Qwen3-8B",
     target_quantize_4bit=True,
-    checkpoint_path="checkpoints/eagle3/eagle3_final.pt",
+    checkpoint_path=_DEFAULT_CKPT,
     target_vram_estimate_gb=4.3,
 )
 

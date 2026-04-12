@@ -126,10 +126,12 @@ def _draft_step(
     with CudaTimer() as timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
         for step in range(gamma):
             if draft_cache is not None and draft_cache_len > 0:
-                # Feed only tokens not yet in the cache
                 new_start = draft_cache_len + step
+                feed_ids = current_input[:, new_start:]
+                if feed_ids.shape[1] == 0:
+                    feed_ids = current_input[:, -1:]
                 out = draft_model(
-                    input_ids=current_input[:, new_start:],
+                    input_ids=feed_ids,
                     attention_mask=current_mask,
                     past_key_values=draft_cache,
                     use_cache=True,

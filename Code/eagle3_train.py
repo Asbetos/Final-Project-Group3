@@ -137,14 +137,16 @@ def create_training_dataloader(
         num_samples=config.num_samples,
         max_seq_len=config.max_seq_len,
     )
+    num_workers = min(os.cpu_count() or 4, 16)
     return DataLoader(
         dataset,
         batch_size=config.batch_size,
         shuffle=True,
-        num_workers=4,
+        num_workers=num_workers,
         pin_memory=True,
         persistent_workers=True,
         drop_last=True,
+        prefetch_factor=4,
     )
 
 
@@ -328,6 +330,7 @@ def train_eagle3_head(
     draft_head.train()
     global_step = 0
     accum_loss = 0.0
+    accum_count = 0
 
     os.makedirs(config.checkpoint_dir, exist_ok=True)
 
@@ -369,6 +372,7 @@ def train_eagle3_head(
 
             loss.backward()
             accum_loss += loss.item()
+            accum_count += 1
 
             if (batch_idx + 1) % config.grad_accum_steps == 0:
                 torch.nn.utils.clip_grad_norm_(
@@ -380,7 +384,7 @@ def train_eagle3_head(
                 global_step += 1
 
                 if global_step % config.log_every == 0:
-                    avg_loss = accum_loss / config.log_every
+                    avg_loss = accum_loss / max(1, accum_count)
                     lr = scheduler.get_last_lr()[0]
                     logger.info(
                         "Epoch %d, step %d/%d, loss=%.4f, lr=%.2e",
@@ -391,6 +395,7 @@ def train_eagle3_head(
                         lr,
                     )
                     accum_loss = 0.0
+                    accum_count = 0
 
                 if global_step % config.save_every == 0:
                     save_checkpoint(

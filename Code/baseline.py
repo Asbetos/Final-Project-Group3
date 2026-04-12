@@ -51,10 +51,9 @@ def autoregressive_decode(
     generated_ids: list[int] = []
     past_key_values = None
     current_input = input_ids
-    current_mask = attention_mask
+    seq_len = input_ids.shape[1]
 
     reset_peak_vram()
-    torch.cuda.empty_cache()
     wall_start = time.perf_counter()
     ttft_ms = 0.0
     ttft_recorded = False
@@ -62,16 +61,19 @@ def autoregressive_decode(
     for step in range(max_new_tokens):
         with CudaTimer() as timer:
             if past_key_values is not None:
+                attention_mask_ext = torch.ones(
+                    1, seq_len, device=device, dtype=attention_mask.dtype
+                )
                 outputs = model(
-                    input_ids=current_input[:, -1:],
-                    attention_mask=current_mask,
+                    input_ids=current_input,
+                    attention_mask=attention_mask_ext,
                     past_key_values=past_key_values,
                     use_cache=True,
                 )
             else:
                 outputs = model(
                     input_ids=current_input,
-                    attention_mask=current_mask,
+                    attention_mask=attention_mask,
                     use_cache=True,
                 )
 
@@ -87,13 +89,8 @@ def autoregressive_decode(
             ttft_ms = (time.perf_counter() - wall_start) * 1000.0
             ttft_recorded = True
 
-        # Prepare next step
-        next_token = torch.tensor([[token_id]], device=device, dtype=input_ids.dtype)
-        current_input = torch.cat([current_input, next_token], dim=1)
-        current_mask = torch.cat(
-            [current_mask, torch.ones(1, 1, device=device, dtype=current_mask.dtype)],
-            dim=1,
-        )
+        current_input = torch.tensor([[token_id]], device=device, dtype=input_ids.dtype)
+        seq_len += 1
 
         if token_id == tokenizer.eos_token_id:
             break

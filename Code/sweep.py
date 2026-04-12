@@ -205,7 +205,9 @@ def main():
                 output_dir=args.output_dir,
             )
 
-    # Run EAGLE-3 experiments if requested
+    if getattr(args, 'eagle3_only', False) and not args.eagle3:
+        args.eagle3 = True
+
     if args.eagle3:
         eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs]
         for pair in eagle3_pairs:

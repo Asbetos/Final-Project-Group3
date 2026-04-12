@@ -11,7 +11,6 @@ Key components:
   - eagle3_decode: main generation loop
 """
 
-import copy
 import logging
 import time
 from dataclasses import dataclass, field
@@ -37,6 +36,30 @@ from sampling import (
 from speculative import _get_cache_seq_len
 
 logger = logging.getLogger(__name__)
+
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
+
+def _clone_draft_kv(kv):
+    """Lightweight KV cache clone via tensor .clone() instead of copy.deepcopy."""
+    if kv is None:
+        return None
+    if hasattr(kv, "key_cache"):
+        from transformers.cache_utils import DynamicCache
+        new_cache = DynamicCache()
+        for layer_idx in range(len(kv.key_cache)):
+            new_cache.update(
+                kv.key_cache[layer_idx].clone(),
+                kv.value_cache[layer_idx].clone(),
+                layer_idx,
+            )
+        return new_cache
+    if isinstance(kv, (list, tuple)):
+        return type(kv)(
+            (k.clone(), v.clone()) for k, v in kv
+        )
+    return kv
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +292,7 @@ def build_draft_tree(
             cum_logprob=top_k_vals[i].item(),
             draft_probs=probs_0.clone(),
             draft_hidden=hidden[:, -1:, :].clone(),
-            draft_kv=copy.deepcopy(kv),
+            draft_kv=_clone_draft_kv(kv),
         ))
 
     if len(tree_nodes) >= config.tree_budget:
@@ -333,7 +356,7 @@ def build_draft_tree(
                     cum_logprob=leaf_node.cum_logprob + top_vals[i].item(),
                     draft_probs=probs_leaf.clone(),
                     draft_hidden=hidden_d[:, -1:, :].clone(),
-                    draft_kv=copy.deepcopy(kv_d),
+                    draft_kv=_clone_draft_kv(kv_d),
                 ))
 
     return tree_nodes
@@ -755,7 +778,6 @@ def eagle3_decode(
     total_draft_ms = 0.0
 
     reset_peak_vram()
-    torch.cuda.empty_cache()
     wall_start = time.perf_counter()
     ttft_ms = 0.0
     ttft_recorded = False

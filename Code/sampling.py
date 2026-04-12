@@ -27,13 +27,10 @@ def sample_from_logits(
         (token_id, probs) where probs is the full distribution over the vocab.
     """
     if temperature == 0.0:
-        # Greedy: deterministic argmax
-        probs = torch.zeros_like(logits)
         token_id = logits.argmax(dim=-1).item()
-        probs[token_id] = 1.0
+        probs = F.softmax(logits, dim=-1)
         return token_id, probs
 
-    # Temperature-scaled sampling
     scaled_logits = logits / temperature
     probs = F.softmax(scaled_logits, dim=-1)
     token_id = torch.multinomial(probs, num_samples=1, generator=generator).item()

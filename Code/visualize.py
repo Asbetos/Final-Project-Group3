@@ -319,7 +319,7 @@ def plot_vram_usage(df: pd.DataFrame, output_dir: str = "figures") -> None:
     ax.set_xlabel("Model Pair")
     ax.set_ylabel("Peak VRAM (GB)")
     ax.set_title("Peak GPU Memory Usage by Model Pair", fontweight="bold")
-    ax.axhline(y=24.0, color="red", linestyle="--", alpha=0.5, label="A10G Limit (24 GB)")
+    ax.axhline(y=80.0, color="red", linestyle="--", alpha=0.5, label="A100 Limit (80 GB)")
     ax.legend()
     plt.tight_layout()
     plt.savefig(

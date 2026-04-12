@@ -151,14 +151,14 @@ def load_eagle3_pair(pair: Eagle3PairConfig):
     device = get_device()
     draft_head = draft_head.to(device=device, dtype=torch.bfloat16)
 
-    # Load trained weights
     if pair.checkpoint_path and os.path.exists(pair.checkpoint_path):
         load_checkpoint(draft_head, pair.checkpoint_path)
         logger.info("Loaded EAGLE-3 checkpoint: %s", pair.checkpoint_path)
     else:
-        logger.warning(
-            "No checkpoint found at %s — using untrained draft head",
-            pair.checkpoint_path,
+        raise FileNotFoundError(
+            f"EAGLE-3 checkpoint not found at '{pair.checkpoint_path}'. "
+            f"Run eagle3_train.py first, or set EAGLE3_CHECKPOINT env var. "
+            f"CWD={os.getcwd()}"
         )
 
     draft_head.eval()
