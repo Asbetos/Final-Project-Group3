@@ -290,6 +290,281 @@ def test_smoke(pair_id: str = "A", max_new_tokens: int = 16):
 
 
 # ===================================================================
+# Level 4: EAGLE-3 Unit Tests (tree mask, draft head shapes)
+# ===================================================================
+
+
+def test_tree_mask_validity():
+    """Tree attention mask should allow ancestors, mask non-ancestors."""
+    from eagle3 import TreeNode, build_tree_attention_mask
+
+    # Build a simple tree: root has 2 children, child 0 has 1 child
+    nodes = [
+        TreeNode(token_id=10, parent_idx=-1, depth=1, cum_logprob=-0.5,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+        TreeNode(token_id=20, parent_idx=-1, depth=1, cum_logprob=-1.0,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+        TreeNode(token_id=30, parent_idx=0, depth=2, cum_logprob=-1.5,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+    ]
+
+    prefix_len = 5
+    mask, pos_ids = build_tree_attention_mask(nodes, prefix_len, torch.device("cpu"))
+
+    # Shape checks
+    assert mask.shape == (1, 1, 3, 8), f"Wrong mask shape: {mask.shape}"
+    assert pos_ids.shape == (1, 3), f"Wrong pos_ids shape: {pos_ids.shape}"
+
+    # All nodes attend to prefix (positions 0..4)
+    for i in range(3):
+        for j in range(prefix_len):
+            assert mask[0, 0, i, j] == 0.0, f"Node {i} should attend to prefix pos {j}"
+
+    # Each node attends to itself
+    for i in range(3):
+        assert mask[0, 0, i, prefix_len + i] == 0.0, f"Node {i} should attend to self"
+
+    # Node 2 (child of node 0) should attend to node 0
+    assert mask[0, 0, 2, prefix_len + 0] == 0.0, "Node 2 should attend to parent node 0"
+
+    # Node 2 should NOT attend to node 1 (sibling of parent, not ancestor)
+    assert mask[0, 0, 2, prefix_len + 1] == float("-inf"), \
+        "Node 2 should not attend to node 1"
+
+    # Node 0 should NOT attend to node 1 or node 2
+    assert mask[0, 0, 0, prefix_len + 1] == float("-inf"), \
+        "Node 0 should not attend to node 1"
+    assert mask[0, 0, 0, prefix_len + 2] == float("-inf"), \
+        "Node 0 should not attend to node 2"
+
+    # Position IDs: siblings share position
+    assert pos_ids[0, 0].item() == prefix_len + 1  # depth 1
+    assert pos_ids[0, 1].item() == prefix_len + 1  # depth 1 (sibling)
+    assert pos_ids[0, 2].item() == prefix_len + 2  # depth 2
+
+    logger.info("  PASS: test_tree_mask_validity")
+
+
+def test_tree_path_extraction():
+    """All root-to-leaf paths should be correctly extracted."""
+    from eagle3 import TreeNode, _get_all_paths
+
+    # Tree: root -> [0, 1], 0 -> [2], 1 -> [3]
+    nodes = [
+        TreeNode(token_id=10, parent_idx=-1, depth=1, cum_logprob=-0.5,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+        TreeNode(token_id=20, parent_idx=-1, depth=1, cum_logprob=-1.0,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+        TreeNode(token_id=30, parent_idx=0, depth=2, cum_logprob=-1.5,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+        TreeNode(token_id=40, parent_idx=1, depth=2, cum_logprob=-2.0,
+                 draft_probs=torch.zeros(10), draft_hidden=torch.zeros(1, 1, 8)),
+    ]
+
+    paths = _get_all_paths(nodes)
+    assert len(paths) == 2, f"Expected 2 paths, got {len(paths)}"
+
+    # Path through node 0 -> node 2
+    assert [0, 2] in paths, f"Missing path [0, 2], got {paths}"
+    # Path through node 1 -> node 3
+    assert [1, 3] in paths, f"Missing path [1, 3], got {paths}"
+
+    logger.info("  PASS: test_tree_path_extraction")
+
+
+def run_eagle3_unit_tests():
+    """Run EAGLE-3 unit tests (no GPU required)."""
+    logger.info("=" * 60)
+    logger.info("Level 4: EAGLE-3 Unit Tests")
+    logger.info("=" * 60)
+    test_tree_mask_validity()
+    test_tree_path_extraction()
+    logger.info("All EAGLE-3 unit tests passed.\n")
+
+
+# ===================================================================
+# Level 5: EAGLE-3 Greedy Equivalence (requires GPU + trained head)
+# ===================================================================
+
+
+def test_eagle3_greedy_equivalence(
+    pair_id: str = "D",
+    max_new_tokens: int = 32,
+    prompt_text: str = "Write a Python function that computes the factorial of a number.",
+):
+    """
+    At temperature=0 with tree_budget=1 (linear chain, no tree), EAGLE-3
+    should produce the same output as baseline autoregressive decoding.
+
+    With tree_budget=1, eagle3_decode just uses target model logits directly
+    (root token only, no draft tree), matching baseline behavior.
+    """
+    from config import EAGLE3_PAIR_MAP
+    from models import load_eagle3_pair, unload_models
+    from baseline import autoregressive_decode
+    from eagle3 import eagle3_decode, Eagle3Config
+
+    logger.info("=" * 60)
+    logger.info("Level 5: EAGLE-3 Greedy Equivalence Test (pair %s)", pair_id)
+    logger.info("=" * 60)
+
+    pair = EAGLE3_PAIR_MAP[pair_id]
+    target_model, draft_head, eagle3_config, tokenizer = load_eagle3_pair(pair)
+
+    try:
+        # Prepare input
+        messages = [
+            {"role": "system", "content": "Complete the following request."},
+            {"role": "user", "content": prompt_text},
+        ]
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
+        )
+        encoded = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
+        input_ids = encoded["input_ids"].to("cuda")
+        attention_mask = encoded["attention_mask"].to("cuda")
+
+        # Baseline autoregressive (greedy)
+        logger.info("Running baseline autoregressive (greedy) ...")
+        baseline_result = autoregressive_decode(
+            target_model,
+            input_ids,
+            attention_mask,
+            temperature=0.0,
+            max_new_tokens=max_new_tokens,
+            tokenizer=tokenizer,
+        )
+        baseline_tokens = baseline_result["output_ids"]
+
+        # EAGLE-3 with tree_budget=1 (linear, no tree)
+        linear_config = Eagle3Config(
+            hidden_size=eagle3_config.hidden_size,
+            num_attention_heads=eagle3_config.num_attention_heads,
+            num_kv_heads=eagle3_config.num_kv_heads,
+            head_dim=eagle3_config.head_dim,
+            intermediate_size=eagle3_config.intermediate_size,
+            feature_layers=eagle3_config.feature_layers,
+            tree_budget=1,
+            max_depth=1,
+            top_k=1,
+            vocab_size=eagle3_config.vocab_size,
+        )
+
+        logger.info("Running EAGLE-3 (greedy, tree_budget=1) ...")
+        eagle3_result = eagle3_decode(
+            target_model,
+            draft_head,
+            linear_config,
+            input_ids,
+            attention_mask,
+            temperature=0.0,
+            max_new_tokens=max_new_tokens,
+            tokenizer=tokenizer,
+        )
+        eagle3_tokens = eagle3_result["output_ids"]
+
+        match = baseline_tokens == eagle3_tokens
+        if match:
+            logger.info(
+                "  PASS: EAGLE-3 linear greedy — exact match (%d tokens)",
+                len(eagle3_tokens),
+            )
+        else:
+            min_len = min(len(baseline_tokens), len(eagle3_tokens))
+            diverge_idx = next(
+                (i for i in range(min_len) if baseline_tokens[i] != eagle3_tokens[i]),
+                min_len,
+            )
+            logger.error(
+                "  FAIL: divergence at token %d. Baseline len=%d, EAGLE-3 len=%d",
+                diverge_idx,
+                len(baseline_tokens),
+                len(eagle3_tokens),
+            )
+            raise AssertionError(
+                f"EAGLE-3 greedy equivalence failed at position {diverge_idx}"
+            )
+
+        logger.info("EAGLE-3 greedy equivalence test passed.\n")
+
+    finally:
+        unload_models(target_model, draft_head)
+
+
+# ===================================================================
+# Level 6: EAGLE-3 Smoke Test (requires GPU + trained head)
+# ===================================================================
+
+
+def test_eagle3_smoke(pair_id: str = "D", max_new_tokens: int = 16):
+    """Quick EAGLE-3 smoke test: tree decode, verify no crash/NaN."""
+    from config import EAGLE3_PAIR_MAP
+    from models import load_eagle3_pair, unload_models
+    from eagle3 import eagle3_decode, Eagle3Config
+
+    logger.info("=" * 60)
+    logger.info("Level 6: EAGLE-3 Smoke Test (pair %s)", pair_id)
+    logger.info("=" * 60)
+
+    pair = EAGLE3_PAIR_MAP[pair_id]
+    target_model, draft_head, eagle3_config, tokenizer = load_eagle3_pair(pair)
+
+    try:
+        messages = [
+            {"role": "user", "content": "Hello, what is 2+2?"},
+        ]
+        text = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
+        )
+        encoded = tokenizer(text, return_tensors="pt")
+        input_ids = encoded["input_ids"].to("cuda")
+        attention_mask = encoded["attention_mask"].to("cuda")
+
+        for tree_budget in [1, 20]:
+            for temp in [0.0, 0.6]:
+                test_config = Eagle3Config(
+                    hidden_size=eagle3_config.hidden_size,
+                    num_attention_heads=eagle3_config.num_attention_heads,
+                    num_kv_heads=eagle3_config.num_kv_heads,
+                    head_dim=eagle3_config.head_dim,
+                    intermediate_size=eagle3_config.intermediate_size,
+                    feature_layers=eagle3_config.feature_layers,
+                    tree_budget=tree_budget,
+                    max_depth=eagle3_config.max_depth,
+                    top_k=eagle3_config.top_k,
+                    vocab_size=eagle3_config.vocab_size,
+                )
+
+                gen = torch.Generator(device="cuda").manual_seed(42)
+                result = eagle3_decode(
+                    target_model,
+                    draft_head,
+                    test_config,
+                    input_ids,
+                    attention_mask,
+                    temperature=temp,
+                    max_new_tokens=max_new_tokens,
+                    tokenizer=tokenizer,
+                    generator=gen,
+                )
+                m = result["metrics"]
+                assert m.total_tokens_generated > 0, "No tokens generated"
+                assert m.tokens_per_second > 0, "TPS is zero"
+                logger.info(
+                    "  PASS: tree_budget=%d t=%.1f — %d tokens, %.1f TPS",
+                    tree_budget,
+                    temp,
+                    m.total_tokens_generated,
+                    m.tokens_per_second,
+                )
+
+        logger.info("EAGLE-3 smoke test passed.\n")
+
+    finally:
+        unload_models(target_model, draft_head)
+
+
+# ===================================================================
 # CLI
 # ===================================================================
 
@@ -299,15 +574,16 @@ def main():
     parser.add_argument(
         "--level",
         type=int,
-        choices=[1, 2, 3],
+        choices=[1, 2, 3, 4, 5, 6],
         default=1,
-        help="Test level: 1=unit, 2=greedy equivalence (GPU), 3=smoke (GPU)",
+        help="Test level: 1=unit, 2=greedy equiv (GPU), 3=smoke (GPU), "
+             "4=EAGLE-3 unit, 5=EAGLE-3 greedy equiv (GPU), 6=EAGLE-3 smoke (GPU)",
     )
     parser.add_argument(
         "--pair",
         type=str,
         default="A",
-        choices=["A", "B", "C"],
+        choices=["A", "B", "C", "D", "E"],
         help="Model pair for GPU tests (default: A)",
     )
     args = parser.parse_args()
@@ -315,9 +591,19 @@ def main():
     if args.level >= 1:
         run_unit_tests()
     if args.level >= 2:
-        test_greedy_equivalence(pair_id=args.pair)
+        if args.pair in ["A", "B", "C"]:
+            test_greedy_equivalence(pair_id=args.pair)
     if args.level >= 3:
-        test_smoke(pair_id=args.pair)
+        if args.pair in ["A", "B", "C"]:
+            test_smoke(pair_id=args.pair)
+    if args.level >= 4:
+        run_eagle3_unit_tests()
+    if args.level >= 5:
+        eagle3_pair = args.pair if args.pair in ["D", "E"] else "D"
+        test_eagle3_greedy_equivalence(pair_id=eagle3_pair)
+    if args.level >= 6:
+        eagle3_pair = args.pair if args.pair in ["D", "E"] else "D"
+        test_eagle3_smoke(pair_id=eagle3_pair)
 
     logger.info("All tests at level %d passed!", args.level)
 

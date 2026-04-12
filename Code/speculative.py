@@ -100,32 +100,36 @@ def _draft_step(
     attention_mask: torch.Tensor,
     gamma: int,
     temperature: float,
+    draft_cache=None,
+    draft_cache_len: int = 0,
     generator: torch.Generator = None,
 ) -> Dict:
     """
     Generate *gamma* tokens autoregressively from the draft model.
 
-    The draft KV-cache is rebuilt from scratch each round (simpler, and the
-    draft model is small enough that this is acceptable overhead).
+    Reuses the draft KV-cache across rounds to avoid redundant prefill.
+    Only new tokens (those beyond draft_cache_len) are fed to the model.
 
     Returns dict with:
         "tokens": List[int]               — drafted token ids
         "probs":  List[torch.Tensor]      — full vocab distribution per token
+        "draft_cache":                     — updated KV-cache (trimmed by caller)
         "elapsed_ms": float               — CUDA-timed duration
     """
     device = input_ids.device
     tokens: List[int] = []
     probs: List[torch.Tensor] = []
 
-    draft_cache = None
     current_input = input_ids
     current_mask = attention_mask
 
-    with CudaTimer() as timer:
-        for _ in range(gamma):
-            if draft_cache is not None:
+    with CudaTimer() as timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
+        for step in range(gamma):
+            if draft_cache is not None and draft_cache_len > 0:
+                # Feed only tokens not yet in the cache
+                new_start = draft_cache_len + step
                 out = draft_model(
-                    input_ids=current_input[:, -1:],
+                    input_ids=current_input[:, new_start:],
                     attention_mask=current_mask,
                     past_key_values=draft_cache,
                     use_cache=True,
@@ -162,6 +166,7 @@ def _draft_step(
     return {
         "tokens": tokens,
         "probs": probs,
+        "draft_cache": draft_cache,
         "elapsed_ms": timer.elapsed_ms,
     }
 
@@ -209,7 +214,7 @@ def _verify_step(
     """
     device = prefix_ids.device
 
-    with CudaTimer() as timer:
+    with CudaTimer() as timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
         # Feed only new tokens (those after the cached prefix) to the target
         new_start = prefix_len_in_cache
         if target_cache is not None and new_start > 0:
@@ -352,6 +357,8 @@ def speculative_decode(
     generated_ids: List[int] = []
     target_cache = None
     target_cache_len = 0  # positions currently in target cache
+    draft_cache = None
+    draft_cache_len = 0   # positions currently in draft cache
 
     all_rounds: List[RoundMetrics] = []
     total_draft_ms = 0.0
@@ -397,10 +404,13 @@ def speculative_decode(
             full_mask,
             effective_gamma,
             temperature,
+            draft_cache,
+            draft_cache_len,
             generator,
         )
         draft_tokens = draft_result["tokens"]
         draft_probs = draft_result["probs"]
+        draft_cache = draft_result["draft_cache"]
         draft_ms = draft_result["elapsed_ms"]
         total_draft_ms += draft_ms
 
@@ -441,6 +451,15 @@ def speculative_decode(
         target_cache = verify_result["target_cache"]
         target_cache_len = current_len + verify_result["num_accepted"]
         verify_ms = verify_result["elapsed_ms"]
+
+        # Trim draft cache to match accepted prefix length.
+        # The draft cache currently covers: prefix + gamma draft tokens.
+        # We keep only prefix + num_accepted (the accepted draft tokens).
+        # The correction/bonus token is NOT in the draft cache and will be
+        # processed as new input in the next round's draft step.
+        draft_keep_len = current_len + num_accepted
+        draft_cache = _trim_kv_cache(draft_cache, draft_keep_len)
+        draft_cache_len = draft_keep_len
 
         # Append accepted tokens
         generated_ids.extend(accepted_tokens)

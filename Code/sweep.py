@@ -5,7 +5,16 @@ import logging
 import os
 import sys
 
-from config import ALL_GAMMAS, ALL_TASKS, ALL_TEMPERATURES, PAIR_MAP, ALL_PAIRS
+from config import (
+    ALL_GAMMAS,
+    ALL_TASKS,
+    ALL_TEMPERATURES,
+    ALL_TREE_BUDGETS,
+    PAIR_MAP,
+    ALL_PAIRS,
+    EAGLE3_PAIR_MAP,
+    ALL_EAGLE3_PAIRS,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,10 +87,42 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print experiment grid without running",
     )
+    # EAGLE-3 arguments
+    parser.add_argument(
+        "--eagle3",
+        action="store_true",
+        help="Run EAGLE-3 experiments",
+    )
+    parser.add_argument(
+        "--eagle3-pairs",
+        nargs="+",
+        default=["D", "E"],
+        choices=["D", "E"],
+        help="EAGLE-3 pair IDs to run (default: D E)",
+    )
+    parser.add_argument(
+        "--tree-budgets",
+        nargs="+",
+        type=int,
+        default=ALL_TREE_BUDGETS,
+        help=f"Tree budgets for EAGLE-3 (default: {ALL_TREE_BUDGETS})",
+    )
     return parser.parse_args()
 
 
 def main():
+    import torch
+
+    # A100 GPU optimizations
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.set_float32_matmul_precision("high")
+
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(0)
+        gpu_cap = torch.cuda.get_device_capability(0)
+        logger.info("GPU: %s (compute capability %d.%d)", gpu_name, *gpu_cap)
+
     args = parse_args()
     pairs = [PAIR_MAP[pid] for pid in args.pairs]
 
@@ -117,17 +158,32 @@ def main():
                     for task in args.tasks:
                         print(f"  [SPEC] {task} gamma={gamma} t={temp}")
             print()
-        print(f"Total: {total} configs, {args.num_prompts} prompts each")
+        if args.eagle3:
+            eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs]
+            for pair in eagle3_pairs:
+                print(f"EAGLE-3 Pair {pair.pair_id}: {pair.target_model_id} + draft head")
+                print(f"  4-bit target: {pair.target_quantize_4bit}")
+                print(f"  Checkpoint: {pair.checkpoint_path}\n")
+                for task in args.tasks:
+                    for temp in args.temps:
+                        print(f"  [BASELINE] {task} t={temp}")
+                for tb in args.tree_budgets:
+                    for temp in args.temps:
+                        for task in args.tasks:
+                            print(f"  [EAGLE3] {task} tree_budget={tb} t={temp}")
+                print()
+        print(f"Total: {total} standard configs, {args.num_prompts} prompts each")
         return
 
     # Defer heavy imports until actually needed (allows --dry-run without GPU deps)
-    from runner import run_pair_sweep
+    from runner import run_pair_sweep, run_eagle3_pair_sweep
 
     # Create output directories
     os.makedirs(os.path.join(args.output_dir, "baseline"), exist_ok=True)
     os.makedirs(os.path.join(args.output_dir, "speculative"), exist_ok=True)
+    os.makedirs(os.path.join(args.output_dir, "eagle3"), exist_ok=True)
 
-    # Run pair by pair (model loading is expensive, batch configs per pair)
+    # Run standard speculative decoding pair by pair
     for pair in pairs:
         logger.info("=" * 70)
         logger.info("Starting pair %s", pair.pair_id)
@@ -142,6 +198,24 @@ def main():
             seed=args.seed,
             output_dir=args.output_dir,
         )
+
+    # Run EAGLE-3 experiments if requested
+    if args.eagle3:
+        eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs]
+        for pair in eagle3_pairs:
+            logger.info("=" * 70)
+            logger.info("Starting EAGLE-3 pair %s", pair.pair_id)
+            logger.info("=" * 70)
+            run_eagle3_pair_sweep(
+                pair,
+                tree_budgets=args.tree_budgets,
+                temperatures=args.temps,
+                tasks=args.tasks,
+                max_new_tokens=args.max_tokens,
+                num_prompts=args.num_prompts,
+                seed=args.seed,
+                output_dir=args.output_dir,
+            )
 
     logger.info("All experiments complete. Results in: %s", args.output_dir)
 

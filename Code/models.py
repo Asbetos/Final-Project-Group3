@@ -2,13 +2,20 @@
 
 import gc
 import logging
+import os
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-from config import ModelPairConfig
+from config import Eagle3PairConfig, ModelPairConfig
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# A100 GPU optimizations — enable TF32 for any stray FP32 matmuls
+# ---------------------------------------------------------------------------
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
 
 def get_device() -> torch.device:
@@ -30,6 +37,7 @@ def load_model(
     model_id: str,
     quantize_4bit: bool = False,
     device: torch.device = None,
+    compile_model: bool = True,
 ) -> AutoModelForCausalLM:
     """
     Load a single Qwen3 model for inference.
@@ -46,14 +54,15 @@ def load_model(
 
     load_kwargs = dict(
         trust_remote_code=True,
-        dtype=torch.float16,
+        dtype=torch.bfloat16,
+        attn_implementation="flash_attention_2",
     )
 
     if quantize_4bit:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
         load_kwargs["quantization_config"] = bnb_config
@@ -63,9 +72,14 @@ def load_model(
     model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
 
     if not quantize_4bit:
-        model = model.to(device=device, dtype=torch.float16)
+        model = model.to(device=device, dtype=torch.bfloat16)
 
     model.eval()
+
+    # torch.compile with reduce-overhead for inference (uses CUDA graphs)
+    if compile_model:
+        logger.info("Compiling model %s with torch.compile ...", model_id)
+        model = torch.compile(model, mode="reduce-overhead")
 
     vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
     logger.info("Model %s loaded. VRAM allocated: %.2f GB", model_id, vram_gb)
@@ -102,6 +116,59 @@ def load_model_pair(pair: ModelPairConfig):
     )
 
     return target_model, draft_model, tokenizer
+
+
+def load_eagle3_pair(pair: Eagle3PairConfig):
+    """
+    Load target model, EAGLE-3 draft head, config, and tokenizer.
+
+    Returns:
+        (target_model, draft_head, eagle3_config, tokenizer)
+    """
+    from eagle3 import Eagle3Config, Eagle3DraftHead
+    from eagle3_train import load_checkpoint
+
+    logger.info("Loading EAGLE-3 pair %s ...", pair.pair_id)
+
+    tokenizer = load_tokenizer(pair.target_model_id)
+
+    # Load target model (compile disabled initially — need hidden states access)
+    target_model = load_model(
+        pair.target_model_id,
+        quantize_4bit=pair.target_quantize_4bit,
+        compile_model=False,
+    )
+
+    # Create and configure draft head
+    eagle3_config = Eagle3Config(
+        tree_budget=pair.tree_budget,
+        max_depth=pair.max_depth,
+        top_k=pair.top_k,
+    )
+
+    draft_head = Eagle3DraftHead(eagle3_config, target_model)
+    device = get_device()
+    draft_head = draft_head.to(device=device, dtype=torch.bfloat16)
+
+    # Load trained weights
+    if pair.checkpoint_path and os.path.exists(pair.checkpoint_path):
+        load_checkpoint(draft_head, pair.checkpoint_path)
+        logger.info("Loaded EAGLE-3 checkpoint: %s", pair.checkpoint_path)
+    else:
+        logger.warning(
+            "No checkpoint found at %s — using untrained draft head",
+            pair.checkpoint_path,
+        )
+
+    draft_head.eval()
+
+    # Compile draft head for inference
+    draft_head = torch.compile(draft_head, mode="reduce-overhead")
+
+    total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
+    logger.info("EAGLE-3 pair %s loaded. Total VRAM: %.2f GB", pair.pair_id, total_vram)
+
+    return target_model, draft_head, eagle3_config, tokenizer
 
 
 def unload_models(*models) -> None:

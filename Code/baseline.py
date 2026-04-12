@@ -54,6 +54,7 @@ def autoregressive_decode(
     current_mask = attention_mask
 
     reset_peak_vram()
+    torch.cuda.empty_cache()
     wall_start = time.perf_counter()
     ttft_ms = 0.0
     ttft_recorded = False
