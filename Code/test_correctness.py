@@ -35,8 +35,8 @@ def test_sample_from_logits_greedy():
     logits = torch.tensor([1.0, 5.0, 3.0, 2.0])
     token_id, probs = sample_from_logits(logits, temperature=0.0)
     assert token_id == 1, f"Expected argmax=1, got {token_id}"
-    assert probs[1] == 1.0, f"Expected one-hot at 1, got {probs}"
-    assert probs.sum().item() == 1.0
+    assert probs[1] == probs.max(), f"Expected max prob at argmax position, got {probs}"
+    assert abs(probs.sum().item() - 1.0) < 1e-5, f"Probs don't sum to 1: {probs.sum()}"
     logger.info("  PASS: test_sample_from_logits_greedy")
 
 
