@@ -90,7 +90,7 @@ PAIR_C = ModelPairConfig(
 ALL_PAIRS = [PAIR_A, PAIR_B, PAIR_C]
 PAIR_MAP = {p.pair_id: p for p in ALL_PAIRS}
 
-ALL_GAMMAS = [1, 3, 5, 7, 10]
+ALL_GAMMAS = [1, 5, 10]
 ALL_TEMPERATURES = [0.0, 0.6, 1.0]
 ALL_TASKS = ["humaneval", "triviaqa", "cnn_dailymail", "writingprompts"]
 
@@ -197,7 +197,7 @@ EAGLE3_PAIR_E = Eagle3PairConfig(
 ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_D, EAGLE3_PAIR_E]
 EAGLE3_PAIR_MAP = {p.pair_id: p for p in ALL_EAGLE3_PAIRS}
 
-ALL_TREE_BUDGETS = [20, 40, 60]
+ALL_TREE_BUDGETS = [20, 60]
 
 
 def build_eagle3_grid(
