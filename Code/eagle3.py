@@ -58,9 +58,9 @@ def _clone_draft_kv(kv):
         return new_cache
     if isinstance(kv, (list, tuple)):
         return type(kv)(
-            (k.clone(), v.clone()) for k, v in kv
+            (entry[0].clone(), entry[1].clone()) for entry in kv
         )
-    return kv
+    return copy.deepcopy(kv)
 
 
 # ---------------------------------------------------------------------------
@@ -461,10 +461,17 @@ def _select_kv_cache_positions(past_key_values, indices: torch.Tensor):
             )
         return past_key_values
 
-    # Legacy tuple format
+    if hasattr(past_key_values, "crop"):
+        from transformers.cache_utils import DynamicCache
+        new_cache = DynamicCache()
+        for layer_data in past_key_values:
+            k, v = layer_data[0], layer_data[1]
+            new_cache.update(k[:, :, indices, :], v[:, :, indices, :], new_cache.get_seq_length())
+        return new_cache
+
     return tuple(
-        (k[:, :, indices, :], v[:, :, indices, :])
-        for k, v in past_key_values
+        (entry[0][:, :, indices, :], entry[1][:, :, indices, :])
+        for entry in past_key_values
     )
 
 
