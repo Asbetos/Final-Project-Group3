@@ -129,12 +129,16 @@ class Eagle3DraftHead(nn.Module):
         self.fusion_fc = nn.Linear(3 * H, H, bias=False)
         self.input_fc = nn.Linear(2 * H, H, bias=False)
 
-        # Copy one decoder layer from the target as the draft decoder
-        # Use the first layer as template, then it's trained from scratch
-        self.decoder_layer = copy.deepcopy(target_model.model.layers[0])
-        # Re-enable gradients on the decoder layer
-        for p in self.decoder_layer.parameters():
-            p.requires_grad = True
+        # Create a decoder layer with the same architecture as the target.
+        # For non-quantized models, deepcopy a layer; for quantized models,
+        # instantiate a fresh layer (checkpoint loading overwrites all weights).
+        try:
+            self.decoder_layer = copy.deepcopy(target_model.model.layers[0])
+            for p in self.decoder_layer.parameters():
+                p.requires_grad = True
+        except RuntimeError:
+            layer_class = type(target_model.model.layers[0])
+            self.decoder_layer = layer_class(target_model.config, layer_idx=0)
 
         # Shared frozen references from target
         self.embed_tokens = target_model.model.embed_tokens
@@ -449,22 +453,42 @@ def build_tree_attention_mask(
 # ---------------------------------------------------------------------------
 
 
+def _ensure_dynamic_cache(past_key_values):
+    """Convert any KV cache format to a DynamicCache for transformers 5.x compat."""
+    if past_key_values is None:
+        return None
+    if hasattr(past_key_values, "key_cache"):
+        return past_key_values
+    from transformers.cache_utils import DynamicCache
+    new_cache = DynamicCache()
+    try:
+        for layer_idx, entry in enumerate(past_key_values):
+            k, v = entry[0], entry[1]
+            new_cache.update(k, v, layer_idx)
+    except (TypeError, IndexError):
+        logger.warning("Could not convert cache type %s to DynamicCache", type(past_key_values))
+    return new_cache
+
+
 def _select_kv_cache_positions(past_key_values, indices: torch.Tensor):
     """
     Select arbitrary positions from the KV cache.
 
     Unlike _trim_kv_cache (prefix slicing), this gathers specific positions
     by index. Used after tree verification to keep only prefix + accepted path.
+    Always returns a DynamicCache for transformers 5.x compatibility.
 
     Args:
         past_key_values: DynamicCache or similar
         indices: (N,) long tensor of position indices to keep
 
     Returns:
-        The modified cache (in-place for DynamicCache)
+        A DynamicCache with only the selected positions.
     """
     if past_key_values is None:
         return None
+
+    past_key_values = _ensure_dynamic_cache(past_key_values)
 
     if hasattr(past_key_values, "key_cache"):
         for layer_idx in range(len(past_key_values.key_cache)):
@@ -476,15 +500,8 @@ def _select_kv_cache_positions(past_key_values, indices: torch.Tensor):
             )
         return past_key_values
 
-    # Legacy tuple-of-tuples format
-    try:
-        return tuple(
-            (entry[0][:, :, indices, :], entry[1][:, :, indices, :])
-            for entry in past_key_values
-        )
-    except (TypeError, IndexError):
-        logger.warning("Unsupported KV cache type %s; returning as-is", type(past_key_values))
-        return past_key_values
+    logger.warning("Unsupported KV cache type %s after conversion; returning as-is", type(past_key_values))
+    return past_key_values
 
 
 # ---------------------------------------------------------------------------
@@ -756,7 +773,7 @@ def _extract_target_features(
     all_hidden = out.hidden_states  # tuple of (B, S, H) for each layer
     features = [all_hidden[layer_idx] for layer_idx in feature_layers]
 
-    return logits, features, out.past_key_values
+    return logits, features, _ensure_dynamic_cache(out.past_key_values)
 
 
 # ---------------------------------------------------------------------------
@@ -949,7 +966,7 @@ def eagle3_decode(
                 past_key_values=target_cache,
                 use_cache=True,
             )
-        target_cache = root_out.past_key_values
+        target_cache = _ensure_dynamic_cache(root_out.past_key_values)
 
         # Now run target on all tree nodes with 4D tree mask
         # Switch to eager attention for 4D mask support
@@ -982,7 +999,7 @@ def eagle3_decode(
             layer.self_attn.config._attn_implementation = original_attn_impl
 
         tree_logits = tree_out.logits  # (1, N_tree, V)
-        tree_cache = tree_out.past_key_values
+        tree_cache = _ensure_dynamic_cache(tree_out.past_key_values)
 
         # ---- Step 4: Verify tree candidates ----
         # root_out.logits[0, -1, :] are the target's predictions after the root token,
