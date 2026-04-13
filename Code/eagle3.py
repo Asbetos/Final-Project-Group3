@@ -178,9 +178,10 @@ class Eagle3DraftHead(nn.Module):
         )
 
         hidden_state = layer_out[0]  # (B, S, H)
+        if hidden_state.dim() == 2:
+            hidden_state = hidden_state.unsqueeze(0)
         new_kv = layer_out[2] if use_cache and len(layer_out) > 2 else None
 
-        # Project to vocabulary (frozen)
         normed = self.norm(hidden_state)
         logits = self.lm_head(normed)  # (B, S, V)
 
