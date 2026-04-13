@@ -826,9 +826,6 @@ def eagle3_decode(
     ttft_ms = 0.0
     ttft_recorded = False
 
-    # Save and restore attention implementation for tree verification
-    original_attn_impl = getattr(target_model.config, "_attn_implementation", "sdpa")
-
     while len(generated_ids) < max_new_tokens:
         round_start = time.perf_counter()
         current_len = prompt_len + len(generated_ids)
@@ -938,91 +935,111 @@ def eagle3_decode(
                 break
             continue
 
-        # ---- Step 3: Build tree attention mask and verify with target ----
-        tree_mask, tree_position_ids = build_tree_attention_mask(
-            tree_nodes, current_len + 1, device  # +1 for the root token
-        )
+        # ---- Step 3: Linearized tree verification ----
+        # Select the best path from the draft tree and verify it sequentially
+        # (avoids 4D tree masks which are incompatible with transformers 5.x
+        # DynamicCache + mixed attention implementations).
 
-        # Prepare tree node token IDs
-        tree_token_ids = torch.tensor(
-            [[node.token_id for node in tree_nodes]],
-            device=device,
-            dtype=input_ids.dtype,
-        )
-
-        # The root token needs to be added to the KV cache first
-        # Add root token to the sequence
-        root_tensor = torch.tensor([[root_token_id]], device=device, dtype=input_ids.dtype)
-        root_mask = torch.cat(
-            [full_mask, torch.ones(1, 1, device=device, dtype=full_mask.dtype)],
-            dim=1,
-        )
-
-        # Run target on root token to update KV cache
-        with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-            root_out = target_model(
-                input_ids=root_tensor,
-                attention_mask=root_mask,
-                past_key_values=target_cache,
-                use_cache=True,
+        paths = _get_all_paths(tree_nodes)
+        if not paths:
+            generated_ids.append(root_token_id)
+            round_ms = (time.perf_counter() - round_start) * 1000.0
+            all_rounds.append(
+                RoundMetrics(
+                    round_index=len(all_rounds),
+                    draft_tokens_proposed=len(tree_nodes),
+                    tokens_accepted=0,
+                    bonus_token_generated=False,
+                    total_tokens_produced=1,
+                    per_token_accepted=[],
+                    draft_time_ms=draft_ms,
+                    verify_time_ms=0.0,
+                    round_time_ms=round_ms,
+                )
             )
-        target_cache = _ensure_dynamic_cache(root_out.past_key_values)
+            if root_token_id == tokenizer.eos_token_id:
+                break
+            continue
 
-        # Now run target on all tree nodes with 4D tree mask
-        # Switch to eager attention for 4D mask support
-        target_model.config._attn_implementation = "eager"
-        # Also need to set on model's internal attention modules
-        for layer in target_model.model.layers:
-            layer.self_attn.config._attn_implementation = "eager"
+        # Pick the path with the best cumulative log-probability
+        best_path = max(paths, key=lambda p: tree_nodes[p[-1]].cum_logprob)
 
-        # Build full attention mask for tree nodes (they see prefix + root + tree)
-        tree_full_mask = torch.cat(
-            [
-                root_mask,
-                torch.ones(1, len(tree_nodes), device=device, dtype=root_mask.dtype),
-            ],
+        # Build the draft token sequence for this path: [root, node0, node1, ...]
+        path_token_ids = [root_token_id] + [tree_nodes[ni].token_id for ni in best_path]
+        path_draft_probs = [root_probs] + [tree_nodes[ni].draft_probs for ni in best_path]
+
+        # Verify the path with a single sequential forward pass
+        path_tensor = torch.tensor(
+            [path_token_ids], device=device, dtype=input_ids.dtype
+        )
+        path_mask = torch.cat(
+            [full_mask, torch.ones(1, len(path_token_ids), device=device, dtype=full_mask.dtype)],
             dim=1,
         )
 
         with CudaTimer() as verify_timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
-            tree_out = target_model(
-                input_ids=tree_token_ids,
-                attention_mask=tree_mask,
+            verify_out = target_model(
+                input_ids=path_tensor,
+                attention_mask=path_mask,
                 past_key_values=target_cache,
                 use_cache=True,
-                position_ids=tree_position_ids,
+            )
+        target_cache = _ensure_dynamic_cache(verify_out.past_key_values)
+        verify_logits = verify_out.logits  # (1, len(path), V)
+
+        # ---- Step 4: Accept/reject each draft token ----
+        # verify_logits[0, i, :] predicts what comes after path_token_ids[i].
+        # To verify path_token_ids[i+1], use verify_logits[0, i, :].
+        accepted_tokens: List[int] = [root_token_id]  # root always accepted
+        num_accepted_tree = 0
+        per_token: List[bool] = []
+
+        for step in range(len(best_path)):
+            target_logits_at = verify_logits[0, step, :]
+            if temperature == 0.0:
+                t_probs = torch.zeros_like(target_logits_at)
+                t_probs[target_logits_at.argmax()] = 1.0
+            else:
+                t_probs = F.softmax(target_logits_at / temperature, dim=-1)
+
+            candidate_id = path_token_ids[step + 1]
+            draft_probs_at = path_draft_probs[step]
+
+            accepted, token = rejection_sample_token(
+                t_probs, draft_probs_at, candidate_id, temperature, generator
             )
 
-        # Restore flash attention
-        target_model.config._attn_implementation = original_attn_impl
-        for layer in target_model.model.layers:
-            layer.self_attn.config._attn_implementation = original_attn_impl
+            if accepted:
+                accepted_tokens.append(candidate_id)
+                per_token.append(True)
+                num_accepted_tree += 1
+            else:
+                accepted_tokens.append(token)
+                per_token.append(False)
+                break
 
-        tree_logits = tree_out.logits  # (1, N_tree, V)
-        tree_cache = _ensure_dynamic_cache(tree_out.past_key_values)
+        total_accepted = len(accepted_tokens)
 
-        # ---- Step 4: Verify tree candidates ----
-        # root_out.logits[0, -1, :] are the target's predictions after the root token,
-        # used to verify root children (depth-1 nodes)
-        root_prefix_logits = root_out.logits[0, -1, :]
-        accepted_tokens_tree, num_accepted_tree, per_token, accepted_indices = verify_tree(
-            tree_logits,
-            tree_nodes,
-            current_len + 1,  # prefix includes root
-            temperature,
-            generator,
-            prefix_logits=root_prefix_logits,
-        )
+        # Bonus token: if the entire path was accepted, sample one more
+        if num_accepted_tree == len(best_path):
+            bonus_logits = verify_logits[0, len(best_path), :]
+            if temperature == 0.0:
+                bonus_probs = torch.zeros_like(bonus_logits)
+                bonus_probs[bonus_logits.argmax()] = 1.0
+            else:
+                bonus_probs = F.softmax(bonus_logits / temperature, dim=-1)
+            bonus_tok = sample_bonus_token(bonus_probs, temperature, generator)
+            accepted_tokens.append(bonus_tok)
+            total_accepted += 1
 
-        # The root token is always accepted (it came from the target model)
-        accepted_tokens = [root_token_id] + accepted_tokens_tree
-        total_accepted = 1 + num_accepted_tree
-
-        # Trim the target KV cache to keep only prefix + root + accepted path
-        accepted_indices_tensor = torch.tensor(
-            accepted_indices, device=device, dtype=torch.long
-        )
-        target_cache = _select_kv_cache_positions(tree_cache, accepted_indices_tensor)
+        # Trim the KV cache to only keep prefix + accepted tokens.
+        # The verify forward pass added len(path_token_ids) entries. We keep
+        # only the first total_accepted of those new entries.
+        cache_keep = _get_cache_seq_len(target_cache) - len(path_token_ids) + total_accepted
+        if hasattr(target_cache, "key_cache"):
+            for layer_idx in range(len(target_cache.key_cache)):
+                target_cache.key_cache[layer_idx] = target_cache.key_cache[layer_idx][:, :, :cache_keep, :]
+                target_cache.value_cache[layer_idx] = target_cache.value_cache[layer_idx][:, :, :cache_keep, :]
         target_cache_len = current_len + total_accepted
 
         # Trim to not exceed max_new_tokens
