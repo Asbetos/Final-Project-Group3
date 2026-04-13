@@ -1,5 +1,6 @@
 """Single-config experiment executor and pair-level sweep orchestrator."""
 
+import json
 import logging
 import os
 import time
@@ -30,6 +31,28 @@ from speculative import speculative_decode
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Resume helpers — check for existing results and skip completed configs
+# ---------------------------------------------------------------------------
+
+
+def _result_json_path(output_dir: str, subdir: str, run_id: str) -> str:
+    """Return the expected JSON result path for a given config."""
+    return os.path.join(output_dir, subdir, f"{run_id}.json")
+
+
+def _load_existing_summary(json_path: str) -> Optional[Dict]:
+    """Load the summary dict from an existing result JSON, or None if missing/corrupt."""
+    if not os.path.isfile(json_path):
+        return None
+    try:
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        return data.get("summary")
+    except (json.JSONDecodeError, OSError, KeyError):
+        return None
+
+
 def _make_generator(seed: int, device: str = "cuda") -> torch.Generator:
     """Create a seeded torch generator on the given device."""
     gen = torch.Generator(device=device)
@@ -48,15 +71,23 @@ def run_single_config(
     Run one full experiment configuration (one cell in the 180-grid).
 
     Steps:
-        1. Tokenize prompts for config.task.
-        2. Run warm-up passes (discard metrics).
-        3. Run speculative decoding on each prompt, collecting metrics.
-        4. Aggregate and save results.
+        1. Check if result already exists (resume support).
+        2. Tokenize prompts for config.task.
+        3. Run warm-up passes (discard metrics).
+        4. Run speculative decoding on each prompt, collecting metrics.
+        5. Aggregate and save results.
 
     Returns:
         Summary dict with mean/std/p95 for all metrics.
     """
     run_id = config.run_id()
+
+    json_path = _result_json_path(output_dir, "speculative", run_id)
+    existing = _load_existing_summary(json_path)
+    if existing is not None:
+        logger.info("SKIP (already done): %s", run_id)
+        return existing
+
     logger.info("Running config: %s", run_id)
 
     prompts = tokenize_prompts(
@@ -139,6 +170,14 @@ def run_baseline_for_pair(
 
         for temp in temperatures:
             run_id = f"{pair.pair_id}_{task}_baseline_t{temp}"
+
+            json_path = _result_json_path(output_dir, "baseline", run_id)
+            existing = _load_existing_summary(json_path)
+            if existing is not None:
+                logger.info("SKIP (already done): %s", run_id)
+                baselines[(task, temp)] = existing
+                continue
+
             logger.info("Running baseline: %s", run_id)
 
             # Warm-up
@@ -274,13 +313,22 @@ def run_pair_sweep(
                         num_prompts=num_prompts,
                         seed=seed,
                     )
-                    summary = run_single_config(
-                        config, target_model, draft_model, tokenizer, output_dir
-                    )
+                    try:
+                        summary = run_single_config(
+                            config, target_model, draft_model, tokenizer, output_dir
+                        )
+                    except Exception:
+                        logger.exception(
+                            "FAILED config %s — skipping to next", config.run_id()
+                        )
+                        done += 1
+                        continue
 
                     # Compute speedup vs baseline
                     baseline_key = (task, temp)
-                    baseline_tps = baselines[baseline_key]["tokens_per_second"]["mean"]
+                    baseline_tps = baselines.get(baseline_key, {}).get(
+                        "tokens_per_second", {}
+                    ).get("mean", 0.0)
                     spec_tps = summary["tokens_per_second"]["mean"]
                     speedup = spec_tps / baseline_tps if baseline_tps > 0 else 0.0
 
@@ -344,6 +392,13 @@ def run_single_eagle3_config(
     Mirrors run_single_config() but uses eagle3_decode instead of speculative_decode.
     """
     run_id = config.run_id()
+
+    json_path = _result_json_path(output_dir, "eagle3", run_id)
+    existing = _load_existing_summary(json_path)
+    if existing is not None:
+        logger.info("SKIP (already done): %s", run_id)
+        return existing
+
     logger.info("Running EAGLE-3 config: %s", run_id)
 
     prompts = tokenize_prompts(
@@ -487,14 +542,24 @@ def run_eagle3_pair_sweep(
                         num_prompts=num_prompts,
                         seed=seed,
                     )
-                    summary = run_single_eagle3_config(
-                        config, target_model, draft_head,
-                        eagle3_config, tokenizer, output_dir,
-                    )
+                    try:
+                        summary = run_single_eagle3_config(
+                            config, target_model, draft_head,
+                            eagle3_config, tokenizer, output_dir,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "FAILED EAGLE-3 config %s — skipping to next",
+                            config.run_id(),
+                        )
+                        done += 1
+                        continue
 
                     # Compute speedup vs baseline
                     baseline_key = (task, temp)
-                    baseline_tps = baselines[baseline_key]["tokens_per_second"]["mean"]
+                    baseline_tps = baselines.get(baseline_key, {}).get(
+                        "tokens_per_second", {}
+                    ).get("mean", 0.0)
                     eagle3_tps = summary["tokens_per_second"]["mean"]
                     speedup = eagle3_tps / baseline_tps if baseline_tps > 0 else 0.0
 

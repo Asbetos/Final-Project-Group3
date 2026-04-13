@@ -63,6 +63,21 @@ def _clone_draft_kv(kv):
     return copy.deepcopy(kv)
 
 
+def _trim_kv_cache_by_one(past_key_values):
+    """Remove the last position from a KV cache so it can be re-computed
+    with output_hidden_states=True on the next forward pass."""
+    if past_key_values is None:
+        return
+    if hasattr(past_key_values, "key_cache"):
+        for layer_idx in range(len(past_key_values.key_cache)):
+            past_key_values.key_cache[layer_idx] = (
+                past_key_values.key_cache[layer_idx][:, :, :-1, :]
+            )
+            past_key_values.value_cache[layer_idx] = (
+                past_key_values.value_cache[layer_idx][:, :, :-1, :]
+            )
+
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -461,18 +476,15 @@ def _select_kv_cache_positions(past_key_values, indices: torch.Tensor):
             )
         return past_key_values
 
-    if hasattr(past_key_values, "crop"):
-        from transformers.cache_utils import DynamicCache
-        new_cache = DynamicCache()
-        for layer_data in past_key_values:
-            k, v = layer_data[0], layer_data[1]
-            new_cache.update(k[:, :, indices, :], v[:, :, indices, :], new_cache.get_seq_length())
-        return new_cache
-
-    return tuple(
-        (entry[0][:, :, indices, :], entry[1][:, :, indices, :])
-        for entry in past_key_values
-    )
+    # Legacy tuple-of-tuples format
+    try:
+        return tuple(
+            (entry[0][:, :, indices, :], entry[1][:, :, indices, :])
+            for entry in past_key_values
+        )
+    except (TypeError, IndexError):
+        logger.warning("Unsupported KV cache type %s; returning as-is", type(past_key_values))
+        return past_key_values
 
 
 # ---------------------------------------------------------------------------
@@ -719,6 +731,12 @@ def _extract_target_features(
     # Determine which tokens to feed (incremental if cache exists)
     if past_key_values is not None and cache_position_start > 0:
         feed_ids = input_ids[:, cache_position_start:]
+        if feed_ids.shape[1] == 0:
+            # Cache already covers all positions (happens after tree verification
+            # updates the cache). Trim the last cache entry and re-feed the last
+            # token so we can extract hidden states for the draft head.
+            _trim_kv_cache_by_one(past_key_values)
+            feed_ids = input_ids[:, -1:]
         out = target_model(
             input_ids=feed_ids,
             attention_mask=attention_mask,
