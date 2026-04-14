@@ -75,13 +75,23 @@ def load_prompts(task: str, num_prompts: int = 50, seed: int = 42) -> List[str]:
     return prompts
 
 
+def _is_qwen_tokenizer(tokenizer: AutoTokenizer) -> bool:
+    """Detect if tokenizer is from the Qwen family (supports enable_thinking)."""
+    name = getattr(tokenizer, "name_or_path", "") or ""
+    cls_name = type(tokenizer).__name__
+    return "qwen" in name.lower() or "qwen" in cls_name.lower()
+
+
 def format_prompt_for_chat(
     raw_prompt: str,
     system_prompt: str,
     tokenizer: AutoTokenizer,
 ) -> str:
     """
-    Apply Qwen3 chat template with thinking mode disabled.
+    Apply the appropriate chat template for the given tokenizer family.
+
+    Qwen3 tokenizers support `enable_thinking=False` to suppress chain-of-thought
+    tokens. Gemma and other tokenizers do not accept this argument.
 
     Returns the formatted string (not yet tokenized).
     """
@@ -89,12 +99,21 @@ def format_prompt_for_chat(
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": raw_prompt},
     ]
-    formatted = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=False,
-    )
+
+    if _is_qwen_tokenizer(tokenizer):
+        formatted = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
+        )
+    else:
+        # Gemma and other families: standard chat template without extra kwargs
+        formatted = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
     return formatted
 
 

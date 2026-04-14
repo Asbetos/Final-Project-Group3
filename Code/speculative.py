@@ -4,11 +4,17 @@ Core speculative decoding loop with full instrumentation.
 Implements the speculative sampling algorithm (Leviathan et al., ICML 2023)
 from scratch with per-token acceptance tracking, CUDA timing, and KV-cache
 management.
+
+Key optimizations over naive implementation:
+  - Pre-allocated sequence buffer — no torch.cat inside the generation loop
+  - In-place token writes inside _draft_step — no inner-loop concatenation
+  - Vectorized _verify_step — batch softmax + single torch.rand(gamma) call
+  - CudaTimer uses end_event.synchronize() — no global pipeline drain
 """
 
 import logging
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -22,7 +28,7 @@ from metrics import (
     reset_peak_vram,
 )
 from sampling import (
-    rejection_sample_token,
+    batch_rejection_sample,
     sample_bonus_token,
     sample_from_logits,
 )
@@ -39,15 +45,12 @@ def _get_cache_seq_len(past_key_values) -> int:
     """Return the current sequence length stored in the KV-cache."""
     if past_key_values is None:
         return 0
-    # DynamicCache with get_seq_length method (transformers >= 5.0)
     if hasattr(past_key_values, "get_seq_length"):
         return past_key_values.get_seq_length()
-    # DynamicCache with key_cache attribute (transformers 4.36–4.x)
     if hasattr(past_key_values, "key_cache"):
         if len(past_key_values.key_cache) == 0:
             return 0
         return past_key_values.key_cache[0].shape[2]
-    # Legacy tuple format
     return past_key_values[0][0].shape[2]
 
 
@@ -65,12 +68,10 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
     if current_len <= target_seq_len:
         return past_key_values
 
-    # DynamicCache with crop method (transformers >= 5.0)
     if hasattr(past_key_values, "crop"):
         past_key_values.crop(target_seq_len)
         return past_key_values
 
-    # DynamicCache with key_cache attribute (transformers 4.36–4.x)
     if hasattr(past_key_values, "key_cache"):
         for layer_idx in range(len(past_key_values.key_cache)):
             past_key_values.key_cache[layer_idx] = (
@@ -81,7 +82,6 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
             )
         return past_key_values
 
-    # Legacy tuple format
     return tuple(
         (k[:, :, :target_seq_len, :], v[:, :, :target_seq_len, :])
         for k, v in past_key_values
@@ -108,38 +108,45 @@ def _draft_step(
     Generate *gamma* tokens autoregressively from the draft model.
 
     Reuses the draft KV-cache across rounds to avoid redundant prefill.
-    Only new tokens (those beyond draft_cache_len) are fed to the model.
+    Uses a pre-allocated in-place buffer instead of torch.cat inside the loop.
 
     Returns dict with:
-        "tokens": List[int]               — drafted token ids
-        "probs":  List[torch.Tensor]      — full vocab distribution per token
-        "draft_cache":                     — updated KV-cache (trimmed by caller)
-        "elapsed_ms": float               — CUDA-timed duration
+        "tokens": List[int]                    — drafted token ids
+        "probs":  List[Optional[torch.Tensor]] — full vocab dist per token (None if greedy)
+        "draft_cache":                          — updated KV-cache (trimmed by caller)
+        "elapsed_ms": float                    — CUDA-timed duration
     """
     device = input_ids.device
+    cur_len = input_ids.shape[1]
+
     tokens: List[int] = []
-    probs: List[torch.Tensor] = []
+    probs: List[Optional[torch.Tensor]] = []
 
-    current_input = input_ids
-    current_mask = attention_mask
+    # Pre-allocate a buffer large enough to hold current input + all gamma draft tokens.
+    # This avoids torch.cat inside the loop entirely.
+    buf_ids = torch.empty(1, cur_len + gamma, dtype=input_ids.dtype, device=device)
+    buf_ids[0, :cur_len] = input_ids[0]
+    buf_mask = torch.ones(1, cur_len + gamma, dtype=attention_mask.dtype, device=device)
+    buf_mask[0, :cur_len] = attention_mask[0]
+    pos = cur_len  # next write position in the buffer
 
-    with CudaTimer() as timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
+    with CudaTimer() as timer:
         for step in range(gamma):
             if draft_cache is not None and draft_cache_len > 0:
                 new_start = draft_cache_len + step
-                feed_ids = current_input[:, new_start:]
+                feed_ids = buf_ids[:, new_start:pos]
                 if feed_ids.shape[1] == 0:
-                    feed_ids = current_input[:, -1:]
+                    feed_ids = buf_ids[:, pos - 1:pos]
                 out = draft_model(
                     input_ids=feed_ids,
-                    attention_mask=current_mask,
+                    attention_mask=buf_mask[:, :pos],
                     past_key_values=draft_cache,
                     use_cache=True,
                 )
             else:
                 out = draft_model(
-                    input_ids=current_input,
-                    attention_mask=current_mask,
+                    input_ids=buf_ids[:, :pos],
+                    attention_mask=buf_mask[:, :pos],
                     use_cache=True,
                 )
 
@@ -152,18 +159,9 @@ def _draft_step(
             tokens.append(token_id)
             probs.append(token_probs)
 
-            # Extend for next iteration
-            next_tok = torch.tensor(
-                [[token_id]], device=device, dtype=input_ids.dtype
-            )
-            current_input = torch.cat([current_input, next_tok], dim=1)
-            current_mask = torch.cat(
-                [
-                    current_mask,
-                    torch.ones(1, 1, device=device, dtype=current_mask.dtype),
-                ],
-                dim=1,
-            )
+            # In-place write — no torch.cat
+            buf_ids[0, pos] = token_id
+            pos += 1
 
     return {
         "tokens": tokens,
@@ -184,7 +182,7 @@ def _verify_step(
     prefix_ids: torch.Tensor,
     prefix_mask: torch.Tensor,
     draft_tokens: List[int],
-    draft_probs: List[torch.Tensor],
+    draft_probs: List[Optional[torch.Tensor]],
     gamma: int,
     temperature: float,
     target_cache,
@@ -193,22 +191,22 @@ def _verify_step(
 ) -> Dict:
     """
     Run ONE target-model forward pass over all draft tokens and perform
-    rejection sampling.
+    vectorized rejection sampling.
 
     Args:
         target_model: The large target model.
         prefix_ids: (1, total_len) — prompt + all previously accepted tokens + draft tokens.
         prefix_mask: (1, total_len) — corresponding attention mask.
         draft_tokens: List of gamma drafted token ids.
-        draft_probs: List of gamma probability tensors (one per draft token).
-        gamma: Speculation length.
+        draft_probs: List of gamma probability tensors (None entries for greedy drafts).
+        gamma: Speculation length (effective, may be < config gamma near end).
         temperature: Sampling temperature.
         target_cache: Existing target KV-cache (or None for first round).
         prefix_len_in_cache: Number of positions already in the target cache.
         generator: Optional torch generator.
 
     Returns dict with:
-        "accepted_tokens": List[int] — accepted + possibly correction/bonus token
+        "accepted_tokens": List[int]
         "num_accepted": int
         "per_token_accepted": List[bool]
         "target_cache": updated and trimmed target KV-cache
@@ -216,8 +214,7 @@ def _verify_step(
     """
     device = prefix_ids.device
 
-    with CudaTimer() as timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
-        # Feed only new tokens (those after the cached prefix) to the target
+    with CudaTimer() as timer:
         new_start = prefix_len_in_cache
         if target_cache is not None and new_start > 0:
             out = target_model(
@@ -236,76 +233,57 @@ def _verify_step(
         target_cache = out.past_key_values
         all_logits = out.logits  # (1, num_new_tokens, vocab_size)
 
-        # The logits correspond to predictions for the NEXT token at each position.
-        # With cache of length L, new input tokens are at positions L, L+1, ...
-        # logits[j] (at position L+j) predicts the token at position L+j+1.
-        # Without cache (L=0), logits[j] at position j predicts token at j+1.
-        #
-        # To verify draft token i at position (prefix_without_draft + i),
-        # we need logits that predict that position, i.e. logits at position
-        # (prefix_without_draft + i - 1). The logits index is:
-        #   (prefix_without_draft + i - 1) - new_start
-
-        # Number of tokens before the draft tokens
+        # Compute logit index offset.
+        # logits[j] at position (new_start + j) predicts the token at (new_start + j + 1).
+        # To verify draft token i at position (prefix_without_draft + i), we need
+        # logits at position (prefix_without_draft + i - 1), i.e., index:
+        #   (prefix_without_draft - 1) - new_start + i  =  logit_offset + i
         prefix_without_draft = prefix_ids.shape[1] - gamma
-
-        # Unified formula: works for both cached (new_start > 0) and
-        # uncached (new_start == 0) cases.
         logit_offset = prefix_without_draft - new_start - 1
 
-        # --- Rejection sampling ---
-        accepted_tokens: List[int] = []
-        per_token_accepted: List[bool] = []
-        num_accepted = 0
+        # Extract target logits for all gamma positions in one slice: (gamma, vocab_size)
+        target_logits_batch = all_logits[0, logit_offset:logit_offset + gamma, :]
 
-        for i in range(gamma):
-            idx = logit_offset + i
-            target_logits_i = all_logits[0, idx, :]  # (vocab_size,)
+        # Build draft probs batch tensor if any probs are available (stochastic mode)
+        draft_tokens_tensor = torch.tensor(draft_tokens, dtype=torch.long, device=device)
+        draft_probs_batch: Optional[torch.Tensor] = None
+        if temperature > 0.0 and any(p is not None for p in draft_probs):
+            draft_probs_batch = torch.stack(
+                [p if p is not None else torch.zeros(target_logits_batch.shape[-1], device=device)
+                 for p in draft_probs],
+                dim=0,
+            )  # (gamma, vocab_size)
 
-            if temperature == 0.0:
-                target_probs_i = torch.zeros_like(target_logits_i)
-                target_probs_i[target_logits_i.argmax()] = 1.0
-            else:
-                target_probs_i = F.softmax(target_logits_i / temperature, dim=-1)
+        # Vectorized rejection sampling across all gamma tokens
+        num_accepted, accepted_tokens = batch_rejection_sample(
+            target_logits_batch,
+            draft_probs_batch,
+            draft_tokens_tensor,
+            gamma,
+            temperature,
+            generator,
+        )
 
-            accepted, token = rejection_sample_token(
-                target_probs_i,
-                draft_probs[i],
-                draft_tokens[i],
-                temperature,
-                generator,
-            )
+        # Reconstruct per_token_accepted flags
+        per_token_accepted: List[bool] = [True] * num_accepted
+        if num_accepted < gamma:
+            per_token_accepted.append(False)
 
-            if accepted:
-                accepted_tokens.append(draft_tokens[i])
-                per_token_accepted.append(True)
-                num_accepted += 1
-            else:
-                accepted_tokens.append(token)
-                per_token_accepted.append(False)
-                break
-
-        # Bonus token: if all gamma accepted, sample one more
+        # Bonus token: if all gamma accepted, sample one more from position logit_offset + gamma
         bonus = False
         if num_accepted == gamma:
             bonus_idx = logit_offset + gamma
             if bonus_idx < all_logits.shape[1]:
                 bonus_logits = all_logits[0, bonus_idx, :]
                 if temperature == 0.0:
-                    bonus_probs = torch.zeros_like(bonus_logits)
-                    bonus_probs[bonus_logits.argmax()] = 1.0
+                    bonus_tok = int(bonus_logits.argmax().item())
                 else:
                     bonus_probs = F.softmax(bonus_logits / temperature, dim=-1)
-                bonus_tok = sample_bonus_token(bonus_probs, temperature, generator)
+                    bonus_tok = sample_bonus_token(bonus_probs, bonus_logits, temperature, generator)
                 accepted_tokens.append(bonus_tok)
                 bonus = True
 
-        # Trim target cache to keep only positions with valid KV entries.
-        # The model processed prefix_without_draft + gamma input tokens,
-        # so the cache has that many entries. We keep only the prefix plus
-        # the num_accepted draft tokens (whose KV is correct). Bonus and
-        # correction tokens were never in the model input, so their KV
-        # will be computed in the next round.
+        # Trim target cache: keep only prefix + accepted draft positions.
         keep_len = prefix_without_draft + num_accepted
         target_cache = _trim_kv_cache(target_cache, keep_len)
 
@@ -327,7 +305,7 @@ def _verify_step(
 @torch.inference_mode()
 def speculative_decode(
     target_model: AutoModelForCausalLM,
-    draft_model: AutoModelForCausalLM,
+    draft_model: Union[AutoModelForCausalLM, Callable],
     input_ids: torch.Tensor,
     attention_mask: torch.Tensor,
     gamma: int,
@@ -341,7 +319,9 @@ def speculative_decode(
 
     Args:
         target_model: Large target model.
-        draft_model: Small draft model.
+        draft_model: Small draft model (torch.nn.Module) OR any callable with signature
+            (input_ids, attention_mask, gamma, temperature, draft_cache, draft_cache_len,
+             generator) -> {"tokens", "probs", "draft_cache", "elapsed_ms"}.
         input_ids: (1, prompt_len) input token IDs.
         attention_mask: (1, prompt_len) attention mask.
         gamma: Number of tokens to draft per round.
@@ -356,11 +336,26 @@ def speculative_decode(
     device = input_ids.device
     prompt_len = input_ids.shape[1]
 
+    # Set up draft function — supports both nn.Module and arbitrary callables
+    if isinstance(draft_model, torch.nn.Module):
+        def draft_fn(fids, fmask, eg, t, dc, dcl, gen):
+            return _draft_step(draft_model, fids, fmask, eg, t, dc, dcl, gen)
+    else:
+        draft_fn = draft_model  # already a callable with the right signature
+
+    # Pre-allocate sequence buffer: prompt + all generated + gamma draft tokens + bonus
+    max_buf = prompt_len + max_new_tokens + gamma + 1
+    buf_ids = torch.empty(1, max_buf, dtype=input_ids.dtype, device=device)
+    buf_mask = torch.ones(1, max_buf, dtype=attention_mask.dtype, device=device)
+    buf_ids[0, :prompt_len] = input_ids[0]
+    buf_mask[0, :prompt_len] = attention_mask[0]
+    cur_pos = prompt_len  # exclusive end of valid content in buf_ids / buf_mask
+
     generated_ids: List[int] = []
     target_cache = None
-    target_cache_len = 0  # positions currently in target cache
+    target_cache_len = 0
     draft_cache = None
-    draft_cache_len = 0   # positions currently in draft cache
+    draft_cache_len = 0
 
     all_rounds: List[RoundMetrics] = []
     total_draft_ms = 0.0
@@ -372,36 +367,18 @@ def speculative_decode(
 
     while len(generated_ids) < max_new_tokens:
         round_start = time.perf_counter()
-        current_len = prompt_len + len(generated_ids)
 
-        # Remaining budget
         remaining = max_new_tokens - len(generated_ids)
         effective_gamma = min(gamma, remaining)
         if effective_gamma <= 0:
             break
 
-        # Build the current full sequence for the draft model
-        if generated_ids:
-            gen_tensor = torch.tensor(
-                [generated_ids], device=device, dtype=input_ids.dtype
-            )
-            full_ids = torch.cat([input_ids, gen_tensor], dim=1)
-            full_mask = torch.cat(
-                [
-                    attention_mask,
-                    torch.ones(
-                        1, len(generated_ids), device=device, dtype=attention_mask.dtype
-                    ),
-                ],
-                dim=1,
-            )
-        else:
-            full_ids = input_ids
-            full_mask = attention_mask
+        # Slice the current valid prefix from the pre-allocated buffer
+        full_ids = buf_ids[:, :cur_pos]
+        full_mask = buf_mask[:, :cur_pos]
 
         # ---- Draft phase ----
-        draft_result = _draft_step(
-            draft_model,
+        draft_result = draft_fn(
             full_ids,
             full_mask,
             effective_gamma,
@@ -416,23 +393,13 @@ def speculative_decode(
         draft_ms = draft_result["elapsed_ms"]
         total_draft_ms += draft_ms
 
-        # ---- Build verification input (prefix + draft tokens) ----
-        draft_tensor = torch.tensor(
-            [draft_tokens], device=device, dtype=input_ids.dtype
+        # Write draft tokens into the buffer in-place (no torch.cat needed)
+        draft_len = len(draft_tokens)
+        buf_ids[0, cur_pos:cur_pos + draft_len] = torch.tensor(
+            draft_tokens, dtype=input_ids.dtype, device=device
         )
-        verify_ids = torch.cat([full_ids, draft_tensor], dim=1)
-        verify_mask = torch.cat(
-            [
-                full_mask,
-                torch.ones(
-                    1,
-                    len(draft_tokens),
-                    device=device,
-                    dtype=attention_mask.dtype,
-                ),
-            ],
-            dim=1,
-        )
+        verify_ids = buf_ids[:, :cur_pos + draft_len]
+        verify_mask = buf_mask[:, :cur_pos + draft_len]
 
         # ---- Verify phase ----
         verify_result = _verify_step(
@@ -451,21 +418,20 @@ def speculative_decode(
         accepted_tokens = verify_result["accepted_tokens"]
         num_accepted = verify_result["num_accepted"]
         target_cache = verify_result["target_cache"]
-        target_cache_len = current_len + verify_result["num_accepted"]
+        target_cache_len = cur_pos + num_accepted
         verify_ms = verify_result["elapsed_ms"]
 
-        # Trim draft cache to match accepted prefix length.
-        # The draft cache currently covers: prefix + gamma draft tokens.
-        # We keep only prefix + num_accepted (the accepted draft tokens).
-        # The correction/bonus token is NOT in the draft cache and will be
-        # processed as new input in the next round's draft step.
-        draft_keep_len = current_len + num_accepted
+        # Trim draft cache to match accepted prefix
+        draft_keep_len = cur_pos + num_accepted
         draft_cache = _trim_kv_cache(draft_cache, draft_keep_len)
         draft_cache_len = draft_keep_len
 
-        # Append accepted tokens, clamping to max_new_tokens
-        remaining = max_new_tokens - len(generated_ids)
-        generated_ids.extend(accepted_tokens[:remaining])
+        # Write accepted tokens into the buffer and advance cur_pos
+        n_to_add = min(len(accepted_tokens), remaining)
+        for i, tok in enumerate(accepted_tokens[:n_to_add]):
+            buf_ids[0, cur_pos + i] = tok
+        cur_pos += n_to_add
+        generated_ids.extend(accepted_tokens[:n_to_add])
 
         if not ttft_recorded and accepted_tokens:
             ttft_ms = (time.perf_counter() - wall_start) * 1000.0
@@ -478,7 +444,7 @@ def speculative_decode(
                 draft_tokens_proposed=effective_gamma,
                 tokens_accepted=num_accepted,
                 bonus_token_generated=verify_result["bonus"],
-                total_tokens_produced=len(accepted_tokens),
+                total_tokens_produced=len(accepted_tokens[:n_to_add]),
                 per_token_accepted=verify_result["per_token_accepted"],
                 draft_time_ms=draft_ms,
                 verify_time_ms=verify_ms,
@@ -495,15 +461,13 @@ def speculative_decode(
     total_tokens = len(generated_ids)
     tps = (total_tokens / wall_ms * 1000.0) if wall_ms > 0 else 0.0
 
-    # Acceptance rate: fraction of draft tokens that were accepted
-    all_decisions = []
+    all_decisions: List[bool] = []
     for r in all_rounds:
         all_decisions.extend(r.per_token_accepted)
     acceptance_rate = (
         sum(all_decisions) / len(all_decisions) if all_decisions else 0.0
     )
 
-    # Acceptance length: mean tokens accepted per round
     acceptance_length = (
         sum(r.tokens_accepted for r in all_rounds) / len(all_rounds)
         if all_rounds
@@ -513,7 +477,7 @@ def speculative_decode(
     draft_overhead = total_draft_ms / wall_ms if wall_ms > 0 else 0.0
 
     metrics = GenerationMetrics(
-        prompt_index=-1,  # set by caller
+        prompt_index=-1,
         total_tokens_generated=total_tokens,
         total_rounds=len(all_rounds),
         wall_clock_ms=wall_ms,

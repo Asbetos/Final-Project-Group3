@@ -31,6 +31,8 @@ PAIR_LABELS = {
     "A": "Pair A  —  Qwen3-8B (fp16) + Qwen3-0.6B  (~20.6 GB)",
     "B": "Pair B  —  Qwen3-8B (fp16) + Qwen3-1.7B  (~22.8 GB)",
     "C": "Pair C  —  Qwen3-8B (4-bit) + Qwen3-0.6B  (~8.2 GB)",
+    "F": "Pair F  —  Gemma3-12B (4-bit) + Gemma3-1B  (~8.6 GB)",
+    "G": "Pair G  —  Gemma4-31B (4-bit) + Gemma3-1B  (~17.5 GB)",
 }
 
 # ── Model caching ────────────────────────────────────────────────────────

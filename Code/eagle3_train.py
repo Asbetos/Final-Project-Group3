@@ -11,6 +11,7 @@ checkpointing, pinned memory DataLoader.
 
 import argparse
 import logging
+import math
 import os
 import sys
 import time
@@ -26,6 +27,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from eagle3 import Eagle3Config, Eagle3DraftHead
 from models import load_model, load_tokenizer, get_device
+from data import _is_qwen_tokenizer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +63,7 @@ class TrainingConfig:
     save_every: int = 500
     log_every: int = 10
     checkpoint_dir: str = "checkpoints/eagle3"
+    final_checkpoint_name: str = "eagle3_final.pt"
     target_model_id: str = "Qwen/Qwen3-8B"
     target_quantize_4bit: bool = False
     dataset_name: str = "tatsu-lab/alpaca"
@@ -72,7 +75,7 @@ class TrainingConfig:
 
 
 class AlpacaDataset(Dataset):
-    """Wraps Alpaca dataset formatted with Qwen3 chat template."""
+    """Wraps Alpaca dataset formatted with the appropriate chat template."""
 
     def __init__(
         self,
@@ -103,9 +106,14 @@ class AlpacaDataset(Dataset):
                 {"role": "assistant", "content": output_text},
             ]
 
-            text = tokenizer.apply_chat_template(
-                messages, tokenize=False, enable_thinking=False
-            )
+            if _is_qwen_tokenizer(tokenizer):
+                text = tokenizer.apply_chat_template(
+                    messages, tokenize=False, enable_thinking=False
+                )
+            else:
+                text = tokenizer.apply_chat_template(
+                    messages, tokenize=False
+                )
             encoded = tokenizer(
                 text,
                 return_tensors="pt",
@@ -303,8 +311,10 @@ def train_eagle3_head(
     Returns:
         trained draft head
     """
-    # Enable gradient checkpointing on target to save VRAM
-    target_model.gradient_checkpointing_enable()
+    # Ensure target model parameters don't accumulate gradients.
+    # The target forward runs under torch.no_grad() so gradients don't flow,
+    # but requires_grad_(False) also prevents VRAM being wasted on grad buffers.
+    target_model.requires_grad_(False)
 
     optimizer = torch.optim.AdamW(
         draft_head.trainable_parameters(),
@@ -320,7 +330,7 @@ def train_eagle3_head(
         if step < warmup_steps:
             return step / max(1, warmup_steps)
         progress = (step - warmup_steps) / max(1, total_steps - warmup_steps)
-        return 0.5 * (1 + torch.cos(torch.tensor(progress * 3.14159)).item())
+        return 0.5 * (1 + math.cos(progress * math.pi))
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
@@ -423,13 +433,11 @@ def train_eagle3_head(
             draft_head, optimizer, global_step, epoch, config.checkpoint_dir
         )
 
-    # Disable gradient checkpointing
-    target_model.gradient_checkpointing_disable()
-
     # Save final checkpoint
     save_checkpoint(
         draft_head, optimizer, global_step, config.epochs - 1,
         config.checkpoint_dir, final=True,
+        final_checkpoint_name=config.final_checkpoint_name,
     )
 
     return draft_head
@@ -447,10 +455,11 @@ def save_checkpoint(
     epoch: int,
     checkpoint_dir: str,
     final: bool = False,
+    final_checkpoint_name: str = "eagle3_final.pt",
 ) -> str:
     """Save draft head weights and optimizer state."""
     if final:
-        path = os.path.join(checkpoint_dir, "eagle3_final.pt")
+        path = os.path.join(checkpoint_dir, final_checkpoint_name)
     else:
         path = os.path.join(checkpoint_dir, f"eagle3_step{global_step}.pt")
 
@@ -536,6 +545,16 @@ def main():
         default=None,
         help="Path to checkpoint to resume from",
     )
+    parser.add_argument(
+        "--final-checkpoint-name",
+        type=str,
+        default=None,
+        help=(
+            "Filename for the final saved checkpoint "
+            "(default: eagle3_final.pt for Qwen3, "
+            "eagle3_gemma4_31b_final.pt auto-detected for Gemma 4)"
+        ),
+    )
     args = parser.parse_args()
 
     torch.set_float32_matmul_precision("high")
@@ -544,6 +563,15 @@ def main():
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
         logger.info("Training on: %s", gpu_name)
+
+    # Auto-derive final checkpoint name from model ID if not explicitly given
+    final_ckpt_name = args.final_checkpoint_name
+    if final_ckpt_name is None:
+        model_lower = args.target_model.lower()
+        if "gemma-4" in model_lower or "gemma4" in model_lower:
+            final_ckpt_name = "eagle3_gemma4_31b_final.pt"
+        else:
+            final_ckpt_name = "eagle3_final.pt"
 
     config = TrainingConfig(
         target_model_id=args.target_model,
@@ -555,6 +583,7 @@ def main():
         num_samples=args.num_samples,
         max_seq_len=args.max_seq_len,
         checkpoint_dir=args.checkpoint_dir,
+        final_checkpoint_name=final_ckpt_name,
     )
 
     # Load target model (frozen)
@@ -567,8 +596,8 @@ def main():
 
     tokenizer = load_tokenizer(config.target_model_id)
 
-    # Create draft head
-    eagle3_config = Eagle3Config()
+    # Create draft head — auto-derive architecture from target model config
+    eagle3_config = Eagle3Config.from_model(target_model)
     draft_head = Eagle3DraftHead(eagle3_config, target_model)
     draft_head = draft_head.to(device=device, dtype=torch.bfloat16)
 

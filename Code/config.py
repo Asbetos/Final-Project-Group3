@@ -10,7 +10,7 @@ _CODE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @dataclass
 class ModelPairConfig:
-    """Defines one of the 3 model pair configurations (A, B, C)."""
+    """Defines one model pair configuration (target + draft model)."""
 
     pair_id: str
     target_model_id: str
@@ -18,6 +18,7 @@ class ModelPairConfig:
     target_quantize_4bit: bool
     target_vram_estimate_gb: float
     draft_vram_estimate_gb: float
+    draft_quantize_4bit: bool = False  # set True to load draft in 4-bit NF4
 
     @property
     def total_vram_estimate_gb(self) -> float:
@@ -83,15 +84,39 @@ PAIR_C = ModelPairConfig(
     draft_vram_estimate_gb=3.9,
 )
 
+# Pair F — Gemma 3 12B (4-bit target) + Gemma 3 1B (bf16 draft)
+# Inference VRAM: ~6.6 + 2.0 = ~8.6 GB.  Within-family tokenizer (262K vocab).
+PAIR_F = ModelPairConfig(
+    pair_id="F",
+    target_model_id="google/gemma-3-12b-it",
+    draft_model_id="google/gemma-3-1b-it",
+    target_quantize_4bit=True,
+    target_vram_estimate_gb=6.6,
+    draft_vram_estimate_gb=2.0,
+)
+
+# Pair G — Gemma 4 31B (4-bit target) + Gemma 3 1B (bf16 draft)
+# Inference VRAM: ~15.5 + 2.0 = ~17.5 GB.  Large target → very low draft overhead ratio.
+PAIR_G = ModelPairConfig(
+    pair_id="G",
+    target_model_id="google/gemma-4-31B",
+    draft_model_id="google/gemma-3-1b-it",
+    target_quantize_4bit=True,
+    target_vram_estimate_gb=15.5,
+    draft_vram_estimate_gb=2.0,
+)
+
 # ---------------------------------------------------------------------------
 # Grid constants
 # ---------------------------------------------------------------------------
 
-ALL_PAIRS = [PAIR_A, PAIR_B, PAIR_C]
-PAIR_MAP = {p.pair_id: p for p in ALL_PAIRS}
+# Qwen pairs (A, B, C) kept in PAIR_MAP for reference but excluded from the
+# active evaluation grid — only Gemma pairs run by default.
+ALL_PAIRS = [PAIR_F, PAIR_G]
+PAIR_MAP = {p.pair_id: p for p in [PAIR_A, PAIR_B, PAIR_C, PAIR_F, PAIR_G]}
 
 ALL_GAMMAS = [1, 5, 10]
-ALL_TEMPERATURES = [0.0, 0.6, 1.0]
+ALL_TEMPERATURES = [0.0]  # greedy-only evaluation
 ALL_TASKS = ["humaneval", "triviaqa", "cnn_dailymail", "writingprompts"]
 
 
@@ -194,8 +219,28 @@ EAGLE3_PAIR_E = Eagle3PairConfig(
     target_vram_estimate_gb=4.3,
 )
 
-ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_D, EAGLE3_PAIR_E]
-EAGLE3_PAIR_MAP = {p.pair_id: p for p in ALL_EAGLE3_PAIRS}
+_GEMMA4_CKPT = os.environ.get(
+    "EAGLE3_GEMMA4_CHECKPOINT",
+    os.path.join(_CODE_DIR, "checkpoints", "eagle3", "eagle3_gemma4_31b_final.pt"),
+)
+
+# Pair H — EAGLE-3 with Gemma 4 31B (4-bit) target.
+# Inference VRAM: ~15.5 GB (target) + ~0.8 GB (draft head) = ~16.3 GB.
+# Training VRAM: ~19–20 GB (target frozen + head + optimizer + activations).
+EAGLE3_PAIR_H = Eagle3PairConfig(
+    pair_id="H",
+    target_model_id="google/gemma-4-31B",
+    target_quantize_4bit=True,
+    checkpoint_path=_GEMMA4_CKPT,
+    tree_budget=60,
+    max_depth=6,
+    top_k=10,
+    target_vram_estimate_gb=15.5,
+)
+
+# Qwen EAGLE-3 pairs (D, E) kept in map for reference; only Gemma H runs by default.
+ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_H]
+EAGLE3_PAIR_MAP = {p.pair_id: p for p in [EAGLE3_PAIR_D, EAGLE3_PAIR_E, EAGLE3_PAIR_H]}
 
 ALL_TREE_BUDGETS = [20, 60]
 

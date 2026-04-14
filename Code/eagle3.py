@@ -12,6 +12,7 @@ Key components:
 """
 
 import copy
+import inspect
 import logging
 import time
 from dataclasses import dataclass, field
@@ -100,6 +101,55 @@ class Eagle3Config:
     rms_norm_eps: float = 1e-6
     rope_theta: float = 1000000.0
 
+    @classmethod
+    def from_model(cls, target_model, **overrides) -> "Eagle3Config":
+        """
+        Derive Eagle3Config automatically from a loaded target model's config.
+
+        Computes feature_layers as three evenly-spaced indices spanning the
+        target model's layer depth (low/mid/high), which works for any architecture.
+        Handles multimodal models (e.g. Gemma 4) where text config is nested
+        inside config.text_config.
+
+        Args:
+            target_model: loaded AutoModelForCausalLM (Qwen3, Gemma, etc.)
+            **overrides: any Eagle3Config fields to override after auto-derivation
+        """
+        # Gemma 4 (multimodal) stores text architecture inside text_config
+        cfg = getattr(target_model.config, "text_config", target_model.config)
+        num_layers = cfg.num_hidden_layers
+
+        # Spread feature layers at 10%, 50%, 95% of total depth
+        low = max(1, int(0.10 * num_layers))
+        mid = max(low + 1, int(0.50 * num_layers))
+        high = max(mid + 1, num_layers - 1)
+        feature_layers = (low, mid, high)
+
+        # Pull architecture dimensions; fall back to Qwen3-8B defaults if absent
+        hidden_size = getattr(cfg, "hidden_size", 4096)
+        num_heads = getattr(cfg, "num_attention_heads", 32)
+        num_kv = getattr(cfg, "num_key_value_heads", num_heads)
+        # Prefer explicit head_dim — Gemma sets it independently of hidden_size
+        head_dim = getattr(cfg, "head_dim", hidden_size // num_heads)
+        intermediate = getattr(cfg, "intermediate_size", 3 * hidden_size)
+        vocab_size = getattr(cfg, "vocab_size", 151936)
+        rms_norm_eps = getattr(cfg, "rms_norm_eps", 1e-6)
+        rope_theta = getattr(cfg, "rope_theta", 1_000_000.0)
+
+        params = dict(
+            hidden_size=hidden_size,
+            num_attention_heads=num_heads,
+            num_kv_heads=num_kv,
+            head_dim=head_dim,
+            intermediate_size=intermediate,
+            feature_layers=feature_layers,
+            vocab_size=vocab_size,
+            rms_norm_eps=rms_norm_eps,
+            rope_theta=rope_theta,
+        )
+        params.update(overrides)
+        return cls(**params)
+
 
 # ---------------------------------------------------------------------------
 # Draft Head
@@ -129,22 +179,46 @@ class Eagle3DraftHead(nn.Module):
         self.fusion_fc = nn.Linear(3 * H, H, bias=False)
         self.input_fc = nn.Linear(2 * H, H, bias=False)
 
+        # Get the text backbone.
+        # Gemma 4 (Gemma4ForConditionalGeneration) wraps the text LM under
+        # model.language_model; pure text models (Qwen3, Gemma3ForCausalLM)
+        # expose layers directly on model.
+        backbone = getattr(target_model.model, "language_model", target_model.model)
+
         # Create a decoder layer with the same architecture as the target.
         # For non-quantized models, deepcopy a layer; for quantized models,
         # instantiate a fresh layer (checkpoint loading overwrites all weights).
         try:
-            self.decoder_layer = copy.deepcopy(target_model.model.layers[0])
+            self.decoder_layer = copy.deepcopy(backbone.layers[0])
             for p in self.decoder_layer.parameters():
                 p.requires_grad = True
         except RuntimeError:
-            layer_class = type(target_model.model.layers[0])
+            layer_class = type(backbone.layers[0])
             self.decoder_layer = layer_class(target_model.config, layer_idx=0)
 
-        # Shared frozen references from target
-        self.embed_tokens = target_model.model.embed_tokens
-        self.norm = target_model.model.norm
+        # Shared frozen references from target backbone
+        self.embed_tokens = backbone.embed_tokens
+        self.norm = backbone.norm
         self.lm_head = target_model.lm_head
-        self.rotary_emb = target_model.model.rotary_emb
+
+        # RoPE: prefer model-level rotary_emb (Qwen3, Llama).
+        # Gemma 3/4 keep RoPE inside each attention module — fall back to the
+        # first layer's attention rotary_emb in that case.
+        self.rotary_emb = getattr(backbone, "rotary_emb", None)
+        if self.rotary_emb is None:
+            attn = getattr(backbone.layers[0], "self_attn", None)
+            if attn is not None:
+                self.rotary_emb = getattr(attn, "rotary_emb", None)
+
+        # Inspect the decoder layer's forward() signature once at init so we
+        # can pass the correct kwargs for each model family in forward().
+        _fwd_params = set(inspect.signature(self.decoder_layer.forward).parameters.keys())
+        self._layer_has_position_embeddings = "position_embeddings" in _fwd_params
+        self._layer_has_global_local_pe = "position_embeddings_global" in _fwd_params
+        # Qwen3 uses past_key_value (singular); some models use past_key_values
+        self._layer_kv_kwarg = (
+            "past_key_value" if "past_key_value" in _fwd_params else "past_key_values"
+        )
 
         # Freeze shared components
         for p in self.embed_tokens.parameters():
@@ -184,17 +258,35 @@ class Eagle3DraftHead(nn.Module):
         # Combine token embedding with fused target features
         combined = self.input_fc(torch.cat([token_emb, fused_hidden], dim=-1))  # (B, S, H)
 
-        # Compute RoPE position embeddings (cos, sin) from position_ids
-        position_embeddings = self.rotary_emb(combined, position_ids)
+        # Build decoder layer kwargs dynamically based on the detected signature.
+        # This lets the same forward() work for Qwen3, Gemma3, and Gemma4 without
+        # per-model branching in the hot path.
+        decoder_kwargs: Dict = {
+            "use_cache": use_cache,
+            self._layer_kv_kwarg: past_key_values,
+        }
+
+        if self._layer_has_position_embeddings:
+            # Qwen3 / Llama: pre-compute RoPE at model level and pass as tuple
+            position_embeddings = self.rotary_emb(combined, position_ids)
+            decoder_kwargs["position_ids"] = position_ids
+            decoder_kwargs["position_embeddings"] = position_embeddings
+        elif self._layer_has_global_local_pe:
+            # Gemma3: decoder layer expects separate global / local RoPE tuples
+            decoder_kwargs["position_ids"] = position_ids
+            if self.rotary_emb is not None:
+                pe = self.rotary_emb(combined, position_ids)
+                # Use the same embeddings for both global and local windows
+                # (the draft head only uses full attention via the copied layer)
+                decoder_kwargs["position_embeddings_global"] = pe
+                decoder_kwargs["position_embeddings_local"] = pe
+            # If rotary_emb is None the layer computes RoPE internally via position_ids
+        else:
+            # Fallback: pass position_ids and let the layer handle RoPE internally
+            decoder_kwargs["position_ids"] = position_ids
 
         # Run through single decoder layer
-        layer_out = self.decoder_layer(
-            combined,
-            position_ids=position_ids,
-            position_embeddings=position_embeddings,
-            past_key_value=past_key_values,
-            use_cache=use_cache,
-        )
+        layer_out = self.decoder_layer(combined, **decoder_kwargs)
 
         hidden_state = layer_out[0]  # (B, S, H)
         if hidden_state.dim() == 2:
@@ -710,7 +802,7 @@ def verify_tree(
                 bonus_probs[bonus_logits.argmax()] = 1.0
             else:
                 bonus_probs = F.softmax(bonus_logits / temperature, dim=-1)
-            bonus_tok = sample_bonus_token(bonus_probs, temperature, generator)
+            bonus_tok = sample_bonus_token(bonus_probs, bonus_logits, temperature, generator)
             best_accepted_tokens.append(bonus_tok)
 
     # Build cache indices: prefix positions + accepted tree node positions
@@ -1028,7 +1120,7 @@ def eagle3_decode(
                 bonus_probs[bonus_logits.argmax()] = 1.0
             else:
                 bonus_probs = F.softmax(bonus_logits / temperature, dim=-1)
-            bonus_tok = sample_bonus_token(bonus_probs, temperature, generator)
+            bonus_tok = sample_bonus_token(bonus_probs, bonus_logits, temperature, generator)
             accepted_tokens.append(bonus_tok)
             total_accepted += 1
 

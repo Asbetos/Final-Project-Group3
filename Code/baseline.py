@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from metrics import (
-    CudaTimer,
     GenerationMetrics,
     RoundMetrics,
     record_peak_vram,
@@ -59,23 +58,22 @@ def autoregressive_decode(
     ttft_recorded = False
 
     for step in range(max_new_tokens):
-        with CudaTimer() as timer:
-            if past_key_values is not None:
-                attention_mask_ext = torch.ones(
-                    1, seq_len, device=device, dtype=attention_mask.dtype
-                )
-                outputs = model(
-                    input_ids=current_input,
-                    attention_mask=attention_mask_ext,
-                    past_key_values=past_key_values,
-                    use_cache=True,
-                )
-            else:
-                outputs = model(
-                    input_ids=current_input,
-                    attention_mask=attention_mask,
-                    use_cache=True,
-                )
+        if past_key_values is not None:
+            attention_mask_ext = torch.ones(
+                1, seq_len, device=device, dtype=attention_mask.dtype
+            )
+            outputs = model(
+                input_ids=current_input,
+                attention_mask=attention_mask_ext,
+                past_key_values=past_key_values,
+                use_cache=True,
+            )
+        else:
+            outputs = model(
+                input_ids=current_input,
+                attention_mask=attention_mask,
+                use_cache=True,
+            )
 
         past_key_values = outputs.past_key_values
         logits = outputs.logits[:, -1, :]  # (1, vocab_size)

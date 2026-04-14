@@ -106,7 +106,7 @@ def load_model_pair(pair: ModelPairConfig):
     )
     target_vram = torch.cuda.memory_allocated() / (1024 ** 3)
 
-    draft_model = load_model(pair.draft_model_id, quantize_4bit=False)
+    draft_model = load_model(pair.draft_model_id, quantize_4bit=pair.draft_quantize_4bit)
     total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
 
     logger.info(
@@ -140,8 +140,11 @@ def load_eagle3_pair(pair: Eagle3PairConfig):
         compile_model=False,
     )
 
-    # Create and configure draft head
-    eagle3_config = Eagle3Config(
+    # Derive draft head config from the loaded target model so architecture
+    # dimensions (hidden_size, vocab_size, head_dim, etc.) are always correct
+    # regardless of which model family is used (Qwen3, Gemma3, Gemma4, ...).
+    eagle3_config = Eagle3Config.from_model(
+        target_model,
         tree_budget=pair.tree_budget,
         max_depth=pair.max_depth,
         top_k=pair.top_k,

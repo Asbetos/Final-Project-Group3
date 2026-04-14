@@ -15,6 +15,8 @@ import sys
 import torch
 import torch.nn.functional as F
 
+from data import _is_qwen_tokenizer
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -162,9 +164,10 @@ def test_greedy_equivalence(
             {"role": "system", "content": "Complete the following request."},
             {"role": "user", "content": prompt_text},
         ]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
+        chat_kwargs = {"tokenize": False, "add_generation_prompt": True}
+        if _is_qwen_tokenizer(tokenizer):
+            chat_kwargs["enable_thinking"] = False
+        text = tokenizer.apply_chat_template(messages, **chat_kwargs)
         encoded = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
         input_ids = encoded["input_ids"].to("cuda")
         attention_mask = encoded["attention_mask"].to("cuda")
@@ -249,9 +252,10 @@ def test_smoke(pair_id: str = "A", max_new_tokens: int = 16):
         messages = [
             {"role": "user", "content": "Hello, what is 2+2?"},
         ]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
+        chat_kwargs = {"tokenize": False, "add_generation_prompt": True}
+        if _is_qwen_tokenizer(tokenizer):
+            chat_kwargs["enable_thinking"] = False
+        text = tokenizer.apply_chat_template(messages, **chat_kwargs)
         encoded = tokenizer(text, return_tensors="pt")
         input_ids = encoded["input_ids"].to("cuda")
         attention_mask = encoded["attention_mask"].to("cuda")
@@ -417,9 +421,10 @@ def test_eagle3_greedy_equivalence(
             {"role": "system", "content": "Complete the following request."},
             {"role": "user", "content": prompt_text},
         ]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
+        chat_kwargs = {"tokenize": False, "add_generation_prompt": True}
+        if _is_qwen_tokenizer(tokenizer):
+            chat_kwargs["enable_thinking"] = False
+        text = tokenizer.apply_chat_template(messages, **chat_kwargs)
         encoded = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
         input_ids = encoded["input_ids"].to("cuda")
         attention_mask = encoded["attention_mask"].to("cuda")
@@ -513,9 +518,10 @@ def test_eagle3_smoke(pair_id: str = "D", max_new_tokens: int = 16):
         messages = [
             {"role": "user", "content": "Hello, what is 2+2?"},
         ]
-        text = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True, enable_thinking=False
-        )
+        chat_kwargs = {"tokenize": False, "add_generation_prompt": True}
+        if _is_qwen_tokenizer(tokenizer):
+            chat_kwargs["enable_thinking"] = False
+        text = tokenizer.apply_chat_template(messages, **chat_kwargs)
         encoded = tokenizer(text, return_tensors="pt")
         input_ids = encoded["input_ids"].to("cuda")
         attention_mask = encoded["attention_mask"].to("cuda")
@@ -583,7 +589,7 @@ def main():
         "--pair",
         type=str,
         default="A",
-        choices=["A", "B", "C", "D", "E"],
+        choices=["A", "B", "C", "D", "E", "F", "G", "H"],
         help="Model pair for GPU tests (default: A)",
     )
     args = parser.parse_args()
@@ -591,18 +597,18 @@ def main():
     if args.level >= 1:
         run_unit_tests()
     if args.level >= 2:
-        if args.pair in ["A", "B", "C"]:
+        if args.pair in ["A", "B", "C", "F", "G"]:
             test_greedy_equivalence(pair_id=args.pair)
     if args.level >= 3:
-        if args.pair in ["A", "B", "C"]:
+        if args.pair in ["A", "B", "C", "F", "G"]:
             test_smoke(pair_id=args.pair)
     if args.level >= 4:
         run_eagle3_unit_tests()
     if args.level >= 5:
-        eagle3_pair = args.pair if args.pair in ["D", "E"] else "D"
+        eagle3_pair = args.pair if args.pair in ["D", "E", "H"] else "D"
         test_eagle3_greedy_equivalence(pair_id=eagle3_pair)
     if args.level >= 6:
-        eagle3_pair = args.pair if args.pair in ["D", "E"] else "D"
+        eagle3_pair = args.pair if args.pair in ["D", "E", "H"] else "D"
         test_eagle3_smoke(pair_id=eagle3_pair)
 
     logger.info("All tests at level %d passed!", args.level)

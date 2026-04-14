@@ -102,7 +102,7 @@ class CudaTimer:
 
     def __exit__(self, *args):
         self.end_event.record()
-        torch.cuda.synchronize()
+        self.end_event.synchronize()  # wait only for this event, not the full GPU pipeline
         self.elapsed_ms = self.start_event.elapsed_time(self.end_event)
 
 

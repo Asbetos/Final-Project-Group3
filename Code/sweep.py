@@ -33,9 +33,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--pairs",
         nargs="+",
-        default=["A", "B", "C"],
-        choices=["A", "B", "C"],
-        help="Model pair IDs to run (default: A B C)",
+        default=["F", "G"],
+        choices=["A", "B", "C", "F", "G"],
+        help="Model pair IDs to run (default: F G; A/B/C=Qwen3, F=Gemma3-12B+1B, G=Gemma4-31B+1B)",
     )
     parser.add_argument(
         "--gammas",
@@ -101,9 +101,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--eagle3-pairs",
         nargs="+",
-        default=["D", "E"],
-        choices=["D", "E"],
-        help="EAGLE-3 pair IDs to run (default: D E)",
+        default=["H"],
+        choices=["D", "E", "H"],
+        help="EAGLE-3 pair IDs to run (default: H; D/E=Qwen3 EAGLE-3, H=Gemma4-31B EAGLE-3)",
     )
     parser.add_argument(
         "--tree-budgets",
