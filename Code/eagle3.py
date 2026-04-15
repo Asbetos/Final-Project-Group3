@@ -217,6 +217,10 @@ class Eagle3DraftHead(nn.Module):
             attn = getattr(backbone.layers[0], "self_attn", None)
             if attn is not None:
                 self.rotary_emb = getattr(attn, "rotary_emb", None)
+        self._rotary_requires_layer_type = False
+        if self.rotary_emb is not None:
+            rotary_params = inspect.signature(self.rotary_emb.forward).parameters
+            self._rotary_requires_layer_type = "layer_type" in rotary_params
 
         # Inspect the decoder layer's forward() signature once at init so we
         # can pass the correct kwargs for each model family in forward().
@@ -274,23 +278,29 @@ class Eagle3DraftHead(nn.Module):
             self._layer_kv_kwarg: past_key_values,
         }
 
-        if self._layer_has_position_embeddings:
+        if (
+            self._layer_has_position_embeddings
+            and self.rotary_emb is not None
+            and not self._rotary_requires_layer_type
+        ):
             # Pre-compute RoPE at model level and pass it through when supported.
             position_embeddings = self.rotary_emb(combined, position_ids)
             decoder_kwargs["position_ids"] = position_ids
             decoder_kwargs["position_embeddings"] = position_embeddings
-        elif self._layer_has_global_local_pe:
+        elif (
+            self._layer_has_global_local_pe
+            and self.rotary_emb is not None
+            and not self._rotary_requires_layer_type
+        ):
             # Gemma3: decoder layer expects separate global / local RoPE tuples
             decoder_kwargs["position_ids"] = position_ids
-            if self.rotary_emb is not None:
-                pe = self.rotary_emb(combined, position_ids)
-                # Use the same embeddings for both global and local windows
-                # (the draft head only uses full attention via the copied layer)
-                decoder_kwargs["position_embeddings_global"] = pe
-                decoder_kwargs["position_embeddings_local"] = pe
-            # If rotary_emb is None the layer computes RoPE internally via position_ids
+            pe = self.rotary_emb(combined, position_ids)
+            # Use the same embeddings for both global and local windows
+            # (the draft head only uses full attention via the copied layer)
+            decoder_kwargs["position_embeddings_global"] = pe
+            decoder_kwargs["position_embeddings_local"] = pe
         else:
-            # Fallback: pass position_ids and let the layer handle RoPE internally
+            # Fallback: pass position_ids and let the layer handle RoPE internally.
             decoder_kwargs["position_ids"] = position_ids
 
         # Different decoder layers return either a bare tensor or a tuple.
