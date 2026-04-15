@@ -100,17 +100,26 @@ def format_prompt_for_chat(
         {"role": "user", "content": raw_prompt},
     ]
 
-    if _is_qwen_tokenizer(tokenizer):
+    try:
+        if _is_qwen_tokenizer(tokenizer):
+            formatted = tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=False,
+            )
+        else:
+            formatted = tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+    except Exception:
+        fallback_messages = [
+            {"role": "user", "content": f"{system_prompt}\n\n{raw_prompt}"},
+        ]
         formatted = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False,
-        )
-    else:
-        # Gemma and other families: standard chat template without extra kwargs
-        formatted = tokenizer.apply_chat_template(
-            messages,
+            fallback_messages,
             tokenize=False,
             add_generation_prompt=True,
         )

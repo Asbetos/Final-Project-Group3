@@ -92,12 +92,12 @@ class Eagle3Config:
     num_attention_heads: int = 32
     num_kv_heads: int = 8
     head_dim: int = 128
-    intermediate_size: int = 12288  # Qwen3-8B MLP size
+    intermediate_size: int = 12288  # fallback only; overridden by from_model()
     feature_layers: Tuple[int, ...] = (4, 16, 31)  # low / mid / high
     tree_budget: int = 60
     max_depth: int = 6
     top_k: int = 10
-    vocab_size: int = 151936  # Qwen3 tokenizer
+    vocab_size: int = 151936  # fallback only; overridden by from_model()
     rms_norm_eps: float = 1e-6
     rope_theta: float = 1000000.0
 
@@ -112,7 +112,7 @@ class Eagle3Config:
         inside config.text_config.
 
         Args:
-            target_model: loaded AutoModelForCausalLM (Qwen3, Gemma, etc.)
+            target_model: loaded target model or text wrapper for the active pair
             **overrides: any Eagle3Config fields to override after auto-derivation
         """
         # Gemma 4 (multimodal) stores text architecture inside text_config
@@ -125,7 +125,7 @@ class Eagle3Config:
         high = max(mid + 1, num_layers - 1)
         feature_layers = (low, mid, high)
 
-        # Pull architecture dimensions; fall back to Qwen3-8B defaults if absent
+        # Pull architecture dimensions; fall back to safe generic defaults if absent
         hidden_size = getattr(cfg, "hidden_size", 4096)
         num_heads = getattr(cfg, "num_attention_heads", 32)
         num_kv = getattr(cfg, "num_key_value_heads", num_heads)
@@ -163,7 +163,7 @@ class Eagle3DraftHead(nn.Module):
     Architecture:
       1. fusion_fc: Linear(3*H, H) — fuse 3 target hidden layers
       2. input_fc: Linear(2*H, H) — combine [token_embedding, fused_features]
-      3. One Qwen3-style decoder layer (GQA attention + SiLU MLP)
+      3. One copied decoder layer from the target model family
       4. Shared frozen lm_head + norm from target model
 
     The draft head reuses the target model's embedding and lm_head (frozen).
@@ -179,11 +179,15 @@ class Eagle3DraftHead(nn.Module):
         self.fusion_fc = nn.Linear(3 * H, H, bias=False)
         self.input_fc = nn.Linear(2 * H, H, bias=False)
 
-        # Get the text backbone.
-        # Gemma 4 (Gemma4ForConditionalGeneration) wraps the text LM under
-        # model.language_model; pure text models (Qwen3, Gemma3ForCausalLM)
-        # expose layers directly on model.
-        backbone = getattr(target_model.model, "language_model", target_model.model)
+        # Resolve the text backbone across plain causal LMs and wrapped Gemma
+        # conditional-generation models.
+        base_model = getattr(target_model, "model", target_model)
+        backbone = getattr(
+            base_model,
+            "language_model",
+            getattr(target_model, "language_model", base_model),
+        )
+        text_cfg = getattr(target_model.config, "text_config", target_model.config)
 
         # Create a decoder layer with the same architecture as the target.
         # For non-quantized models, deepcopy a layer; for quantized models,
@@ -194,14 +198,18 @@ class Eagle3DraftHead(nn.Module):
                 p.requires_grad = True
         except RuntimeError:
             layer_class = type(backbone.layers[0])
-            self.decoder_layer = layer_class(target_model.config, layer_idx=0)
+            self.decoder_layer = layer_class(text_cfg, layer_idx=0)
 
         # Shared frozen references from target backbone
         self.embed_tokens = backbone.embed_tokens
         self.norm = backbone.norm
-        self.lm_head = target_model.lm_head
+        self.lm_head = target_model.get_output_embeddings()
+        if self.lm_head is None:
+            self.lm_head = getattr(target_model, "lm_head", getattr(backbone, "lm_head", None))
+        if self.lm_head is None:
+            raise ValueError("Could not locate lm_head/output embeddings on target model")
 
-        # RoPE: prefer model-level rotary_emb (Qwen3, Llama).
+        # RoPE: prefer model-level rotary_emb when exposed directly.
         # Gemma 3/4 keep RoPE inside each attention module — fall back to the
         # first layer's attention rotary_emb in that case.
         self.rotary_emb = getattr(backbone, "rotary_emb", None)
@@ -215,7 +223,7 @@ class Eagle3DraftHead(nn.Module):
         _fwd_params = set(inspect.signature(self.decoder_layer.forward).parameters.keys())
         self._layer_has_position_embeddings = "position_embeddings" in _fwd_params
         self._layer_has_global_local_pe = "position_embeddings_global" in _fwd_params
-        # Qwen3 uses past_key_value (singular); some models use past_key_values
+        # Some model families use past_key_value (singular); others use plural.
         self._layer_kv_kwarg = (
             "past_key_value" if "past_key_value" in _fwd_params else "past_key_values"
         )
@@ -259,7 +267,7 @@ class Eagle3DraftHead(nn.Module):
         combined = self.input_fc(torch.cat([token_emb, fused_hidden], dim=-1))  # (B, S, H)
 
         # Build decoder layer kwargs dynamically based on the detected signature.
-        # This lets the same forward() work for Qwen3, Gemma3, and Gemma4 without
+        # This lets the same forward() work across the supported Gemma stacks without
         # per-model branching in the hot path.
         decoder_kwargs: Dict = {
             "use_cache": use_cache,
@@ -267,7 +275,7 @@ class Eagle3DraftHead(nn.Module):
         }
 
         if self._layer_has_position_embeddings:
-            # Qwen3 / Llama: pre-compute RoPE at model level and pass as tuple
+            # Pre-compute RoPE at model level and pass it through when supported.
             position_embeddings = self.rotary_emb(combined, position_ids)
             decoder_kwargs["position_ids"] = position_ids
             decoder_kwargs["position_embeddings"] = position_embeddings
@@ -285,13 +293,21 @@ class Eagle3DraftHead(nn.Module):
             # Fallback: pass position_ids and let the layer handle RoPE internally
             decoder_kwargs["position_ids"] = position_ids
 
-        # Run through single decoder layer
+        # Different decoder layers return either a bare tensor or a tuple.
+        # Handle both without collapsing the batch dim.
         layer_out = self.decoder_layer(combined, **decoder_kwargs)
 
-        hidden_state = layer_out[0]  # (B, S, H)
+        if isinstance(layer_out, torch.Tensor):
+            hidden_state = layer_out
+            new_kv = past_key_values if use_cache else None
+        else:
+            hidden_state = layer_out[0]
+            new_kv = None
+            if use_cache and len(layer_out) > 2:
+                new_kv = layer_out[2]
+
         if hidden_state.dim() == 2:
             hidden_state = hidden_state.unsqueeze(0)
-        new_kv = layer_out[2] if use_cache and len(layer_out) > 2 else None
 
         normed = self.norm(hidden_state)
         logits = self.lm_head(normed)  # (B, S, V)
@@ -390,12 +406,15 @@ def build_draft_tree(
     logits_0 = logits[0, -1, :]  # (V,)
     if temperature > 0:
         probs_0 = F.softmax(logits_0 / temperature, dim=-1)
+        log_probs_0 = torch.log(probs_0 + 1e-10)
+        top_k_vals, top_k_ids = torch.topk(
+            log_probs_0, min(config.top_k, config.tree_budget)
+        )
     else:
         probs_0 = torch.zeros_like(logits_0)
-        probs_0[logits_0.argmax()] = 1.0
-
-    log_probs_0 = torch.log(probs_0 + 1e-10)
-    top_k_vals, top_k_ids = torch.topk(log_probs_0, min(config.top_k, config.tree_budget))
+        top_k_ids = logits_0.argmax().view(1)
+        probs_0[top_k_ids[0]] = 1.0
+        top_k_vals = logits_0.new_zeros(1)
 
     for i in range(len(top_k_ids)):
         tree_nodes.append(TreeNode(
@@ -451,13 +470,14 @@ def build_draft_tree(
             logits_leaf = logits_d[0, -1, :]
             if temperature > 0:
                 probs_leaf = F.softmax(logits_leaf / temperature, dim=-1)
+                log_probs_leaf = torch.log(probs_leaf + 1e-10)
+                k = min(config.top_k, config.tree_budget - len(tree_nodes))
+                top_vals, top_ids = torch.topk(log_probs_leaf, k)
             else:
                 probs_leaf = torch.zeros_like(logits_leaf)
-                probs_leaf[logits_leaf.argmax()] = 1.0
-
-            log_probs_leaf = torch.log(probs_leaf + 1e-10)
-            k = min(config.top_k, config.tree_budget - len(tree_nodes))
-            top_vals, top_ids = torch.topk(log_probs_leaf, k)
+                top_ids = logits_leaf.argmax().view(1)
+                probs_leaf[top_ids[0]] = 1.0
+                top_vals = logits_leaf.new_zeros(1)
 
             for i in range(len(top_ids)):
                 if len(tree_nodes) >= config.tree_budget:
@@ -1058,7 +1078,7 @@ def eagle3_decode(
 
         # Build the draft token sequence for this path: [root, node0, node1, ...]
         path_token_ids = [root_token_id] + [tree_nodes[ni].token_id for ni in best_path]
-        path_draft_probs = [root_probs] + [tree_nodes[ni].draft_probs for ni in best_path]
+        path_draft_probs = [tree_nodes[ni].draft_probs for ni in best_path]
 
         # Verify the path with a single sequential forward pass
         path_tensor = torch.tensor(

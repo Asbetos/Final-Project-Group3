@@ -23,7 +23,9 @@ def load_master_csv(path: str = "results/summary.csv") -> pd.DataFrame:
 
 def plot_speedup_vs_gamma(df: pd.DataFrame, output_dir: str = "figures") -> None:
     """Line plot: speedup vs gamma, faceted by task, hued by pair."""
-    spec = df[df["is_baseline"] == False].copy()
+    spec = df[
+        (df["is_baseline"] == False) & (~df["is_eagle3"].fillna(False))
+    ].copy()
     if spec.empty:
         return
 
@@ -61,7 +63,9 @@ def plot_speedup_vs_gamma(df: pd.DataFrame, output_dir: str = "figures") -> None
 
 def plot_acceptance_rate_heatmap(df: pd.DataFrame, output_dir: str = "figures") -> None:
     """Heatmap: gamma x task, one subplot per (pair, temperature)."""
-    spec = df[df["is_baseline"] == False].copy()
+    spec = df[
+        (df["is_baseline"] == False) & (~df["is_eagle3"].fillna(False))
+    ].copy()
     if spec.empty:
         return
 
@@ -158,13 +162,17 @@ def plot_pareto_frontier(df: pd.DataFrame, output_dir: str = "figures") -> None:
 
 
 # ---------------------------------------------------------------------------
-# Plot 4: Draft Size Comparison (Pair A vs B)
+# Plot 4: Active Gemma Pair Comparison (F vs G)
 # ---------------------------------------------------------------------------
 
 
 def plot_draft_size_comparison(df: pd.DataFrame, output_dir: str = "figures") -> None:
-    """Grouped bar chart comparing Pair A (0.6B draft) vs Pair B (1.7B draft)."""
-    spec = df[(df["is_baseline"] == False) & (df["pair_id"].isin(["A", "B"]))].copy()
+    """Grouped bar chart comparing the active standard Gemma pairs."""
+    spec = df[
+        (df["is_baseline"] == False)
+        & (df["pair_id"].isin(["F", "G"]))
+        & (~df["is_eagle3"].fillna(False))
+    ].copy()
     if spec.empty:
         return
 
@@ -181,7 +189,7 @@ def plot_draft_size_comparison(df: pd.DataFrame, output_dir: str = "figures") ->
         ax.tick_params(axis="x", rotation=30)
 
     fig.suptitle(
-        "Draft Size Comparison: 0.6B (Pair A) vs 1.7B (Pair B)", fontweight="bold"
+        "Active Gemma Pair Comparison: Pair F vs Pair G", fontweight="bold"
     )
     plt.tight_layout()
     plt.savefig(
@@ -193,15 +201,21 @@ def plot_draft_size_comparison(df: pd.DataFrame, output_dir: str = "figures") ->
 
 
 # ---------------------------------------------------------------------------
-# Plot 5: Quantization Impact (Pair A vs C)
+# Plot 5: Active Gemma Method Comparison
 # ---------------------------------------------------------------------------
 
 
 def plot_quantization_impact(df: pd.DataFrame, output_dir: str = "figures") -> None:
-    """Grouped bar chart comparing Pair A (fp16) vs Pair C (4-bit target)."""
-    spec = df[(df["is_baseline"] == False) & (df["pair_id"].isin(["A", "C"]))].copy()
+    """Grouped bar chart comparing the best active Gemma configs per pair."""
+    spec = df[(df["is_baseline"] == False) & (df["pair_id"].isin(["F", "G", "H"]))].copy()
     if spec.empty:
         return
+
+    spec = (
+        spec.sort_values("speedup", ascending=False)
+        .groupby(["pair_id", "task"], as_index=False)
+        .first()
+    )
 
     metrics = ["mean_acceptance_rate", "speedup", "mean_peak_vram_gb"]
     labels = ["Acceptance Rate (α)", "Speedup (×)", "Peak VRAM (GB)"]
@@ -216,7 +230,8 @@ def plot_quantization_impact(df: pd.DataFrame, output_dir: str = "figures") -> N
         ax.tick_params(axis="x", rotation=30)
 
     fig.suptitle(
-        "Quantization Impact: fp16 (Pair A) vs 4-bit NF4 (Pair C)", fontweight="bold"
+        "Active Gemma Best-Config Comparison: Pair F vs Pair G vs Pair H",
+        fontweight="bold",
     )
     plt.tight_layout()
     plt.savefig(
@@ -236,13 +251,22 @@ def plot_ttft_comparison(df: pd.DataFrame, output_dir: str = "figures") -> None:
     """Bar chart: TTFT for baseline vs speculative across pairs."""
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Combine baseline and best speculative (gamma=3) for comparison
+    # Combine baseline and the best non-EAGLE speculative config per pair/task.
     baseline = df[df["is_baseline"] == True].copy()
-    spec_g3 = df[(df["is_baseline"] == False) & (df["gamma"] == 3)].copy()
+    spec_best = df[
+        (df["is_baseline"] == False)
+        & (~df["is_eagle3"].fillna(False))
+        & (df["pair_id"].isin(["F", "G"]))
+    ].copy()
+    spec_best = (
+        spec_best.sort_values("speedup", ascending=False)
+        .groupby(["pair_id", "task"], as_index=False)
+        .first()
+    )
 
     baseline["method"] = "Baseline"
-    spec_g3["method"] = "Speculative (γ=3)"
-    combined = pd.concat([baseline, spec_g3], ignore_index=True)
+    spec_best["method"] = "Best Speculative"
+    combined = pd.concat([baseline, spec_best], ignore_index=True)
 
     if combined.empty:
         return

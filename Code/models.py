@@ -5,14 +5,19 @@ import logging
 import os
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+try:
+    from transformers import AutoModelForImageTextToText
+except ImportError:  # pragma: no cover - older transformers fallback
+    AutoModelForImageTextToText = None
 
 from config import Eagle3PairConfig, ModelPairConfig
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# A100 GPU optimizations — enable TF32 for any stray FP32 matmuls
+# CUDA GPU optimizations — enable TF32 for any stray FP32 matmuls
 # ---------------------------------------------------------------------------
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -25,8 +30,8 @@ def get_device() -> torch.device:
     return torch.device("cuda:0")
 
 
-def load_tokenizer(model_id: str = "Qwen/Qwen3-0.6B") -> AutoTokenizer:
-    """Load the shared Qwen3 tokenizer (vocab_size=151936, identical across sizes)."""
+def load_tokenizer(model_id: str) -> AutoTokenizer:
+    """Load the tokenizer for the requested model id."""
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -38,12 +43,12 @@ def load_model(
     quantize_4bit: bool = False,
     device: torch.device = None,
     compile_model: bool = True,
-) -> AutoModelForCausalLM:
+) -> torch.nn.Module:
     """
-    Load a single Qwen3 model for inference.
+    Load a single target model for inference or EAGLE-3 training.
 
     Args:
-        model_id: HuggingFace model identifier (e.g. "Qwen/Qwen3-8B").
+        model_id: HuggingFace model identifier.
         quantize_4bit: If True, apply NF4 4-bit quantization via bitsandbytes.
         device: Target device (defaults to cuda:0).
 
@@ -54,7 +59,7 @@ def load_model(
 
     load_kwargs = dict(
         trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         attn_implementation="sdpa",
     )
 
@@ -69,7 +74,16 @@ def load_model(
         load_kwargs["device_map"] = {"": device}
 
     logger.info("Loading model %s (4-bit=%s) ...", model_id, quantize_4bit)
-    model = AutoModelForCausalLM.from_pretrained(model_id, **load_kwargs)
+    model_config = AutoConfig.from_pretrained(model_id, trust_remote_code=True)
+    architectures = getattr(model_config, "architectures", []) or []
+    is_conditional_generation = any(
+        "ConditionalGeneration" in architecture for architecture in architectures
+    )
+    model_cls = AutoModelForCausalLM
+    if is_conditional_generation and AutoModelForImageTextToText is not None:
+        model_cls = AutoModelForImageTextToText
+
+    model = model_cls.from_pretrained(model_id, **load_kwargs)
 
     if not quantize_4bit:
         model = model.to(device=device, dtype=torch.bfloat16)
@@ -77,7 +91,7 @@ def load_model(
     model.eval()
 
     # torch.compile disabled — CUDA graphs conflict with dynamic KV cache
-    # in transformers 5.x + PyTorch 2.4. SDPA on A100 is already fast.
+    # in transformers 5.x + PyTorch 2.4. SDPA on modern GPUs is already fast.
     if False and compile_model:
         logger.info("Compiling model %s with torch.compile ...", model_id)
         model = torch.compile(model, mode="reduce-overhead")
@@ -97,7 +111,7 @@ def load_model_pair(pair: ModelPairConfig):
     """
     logger.info("Loading model pair %s ...", pair.pair_id)
 
-    tokenizer = load_tokenizer(pair.draft_model_id)
+    tokenizer = load_tokenizer(pair.target_model_id)
 
     # Load target first (larger) — fail fast on OOM
     target_model = load_model(
@@ -142,7 +156,7 @@ def load_eagle3_pair(pair: Eagle3PairConfig):
 
     # Derive draft head config from the loaded target model so architecture
     # dimensions (hidden_size, vocab_size, head_dim, etc.) are always correct
-    # regardless of which model family is used (Qwen3, Gemma3, Gemma4, ...).
+    # regardless of which Gemma text stack is wrapped by the loaded model.
     eagle3_config = Eagle3Config.from_model(
         target_model,
         tree_budget=pair.tree_budget,
@@ -160,7 +174,8 @@ def load_eagle3_pair(pair: Eagle3PairConfig):
     else:
         raise FileNotFoundError(
             f"EAGLE-3 checkpoint not found at '{pair.checkpoint_path}'. "
-            f"Run eagle3_train.py first, or set EAGLE3_CHECKPOINT env var. "
+            f"Run eagle3_train.py first, or set EAGLE3_GEMMA4_CHECKPOINT "
+            f"(or EAGLE3_CHECKPOINT) in the environment. "
             f"CWD={os.getcwd()}"
         )
 

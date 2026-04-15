@@ -18,6 +18,11 @@ env/
 # Results and logs (regenerable from experiments)
 results/
 *.txt
+Code/*.log
+Code/checkpoints/
+Code/archive/qwen_legacy/checkpoints/
+Code/archive/qwen_legacy/logs/
+Code/archive/qwen_legacy/results/
 
 # IDE / Editor
 .vscode/

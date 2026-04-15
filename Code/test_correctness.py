@@ -110,7 +110,7 @@ def test_bonus_token_greedy():
     from sampling import sample_bonus_token
 
     probs = torch.tensor([0.1, 0.1, 0.7, 0.1])
-    token = sample_bonus_token(probs, temperature=0.0)
+    token = sample_bonus_token(probs, None, temperature=0.0)
     assert token == 2, f"Expected argmax=2, got {token}"
     logger.info("  PASS: test_bonus_token_greedy")
 
@@ -136,7 +136,7 @@ def run_unit_tests():
 
 
 def test_greedy_equivalence(
-    pair_id: str = "A",
+    pair_id: str = "F",
     max_new_tokens: int = 32,
     prompt_text: str = "Write a Python function that computes the factorial of a number.",
 ):
@@ -235,7 +235,7 @@ def test_greedy_equivalence(
 # ===================================================================
 
 
-def test_smoke(pair_id: str = "A", max_new_tokens: int = 16):
+def test_smoke(pair_id: str = "F", max_new_tokens: int = 16):
     """Quick smoke test: 1 prompt, few tokens, check no crash/NaN."""
     from config import PAIR_MAP
     from models import load_model_pair, unload_models
@@ -392,7 +392,7 @@ def run_eagle3_unit_tests():
 
 
 def test_eagle3_greedy_equivalence(
-    pair_id: str = "D",
+    pair_id: str = "H",
     max_new_tokens: int = 32,
     prompt_text: str = "Write a Python function that computes the factorial of a number.",
 ):
@@ -501,7 +501,7 @@ def test_eagle3_greedy_equivalence(
 # ===================================================================
 
 
-def test_eagle3_smoke(pair_id: str = "D", max_new_tokens: int = 16):
+def test_eagle3_smoke(pair_id: str = "H", max_new_tokens: int = 16):
     """Quick EAGLE-3 smoke test: tree decode, verify no crash/NaN."""
     from config import EAGLE3_PAIR_MAP
     from models import load_eagle3_pair, unload_models
@@ -588,27 +588,27 @@ def main():
     parser.add_argument(
         "--pair",
         type=str,
-        default="A",
-        choices=["A", "B", "C", "D", "E", "F", "G", "H"],
-        help="Model pair for GPU tests (default: A)",
+        default="F",
+        choices=["F", "G", "H"],
+        help="Model pair for GPU tests (default: F; H is EAGLE-3 only)",
     )
     args = parser.parse_args()
 
     if args.level >= 1:
         run_unit_tests()
     if args.level >= 2:
-        if args.pair in ["A", "B", "C", "F", "G"]:
+        if args.pair in ["F", "G"]:
             test_greedy_equivalence(pair_id=args.pair)
     if args.level >= 3:
-        if args.pair in ["A", "B", "C", "F", "G"]:
+        if args.pair in ["F", "G"]:
             test_smoke(pair_id=args.pair)
     if args.level >= 4:
         run_eagle3_unit_tests()
     if args.level >= 5:
-        eagle3_pair = args.pair if args.pair in ["D", "E", "H"] else "D"
+        eagle3_pair = args.pair if args.pair == "H" else "H"
         test_eagle3_greedy_equivalence(pair_id=eagle3_pair)
     if args.level >= 6:
-        eagle3_pair = args.pair if args.pair in ["D", "E", "H"] else "D"
+        eagle3_pair = args.pair if args.pair == "H" else "H"
         test_eagle3_smoke(pair_id=eagle3_pair)
 
     logger.info("All tests at level %d passed!", args.level)

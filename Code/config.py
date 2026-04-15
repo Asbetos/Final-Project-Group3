@@ -27,7 +27,7 @@ class ModelPairConfig:
 
 @dataclass
 class ExperimentConfig:
-    """A single point in the 180-configuration grid."""
+    """A single point in the active Gemma standard-speculation grid."""
 
     pair: ModelPairConfig
     gamma: int                  # speculation length: 1, 3, 5, 7, 10
@@ -54,38 +54,11 @@ class ExperimentConfig:
 
 
 # ---------------------------------------------------------------------------
-# Pre-built model pair definitions
+# Active Gemma model pair definitions
 # ---------------------------------------------------------------------------
 
-PAIR_A = ModelPairConfig(
-    pair_id="A",
-    target_model_id="Qwen/Qwen3-8B",
-    draft_model_id="Qwen/Qwen3-0.6B",
-    target_quantize_4bit=False,
-    target_vram_estimate_gb=16.7,
-    draft_vram_estimate_gb=3.9,
-)
-
-PAIR_B = ModelPairConfig(
-    pair_id="B",
-    target_model_id="Qwen/Qwen3-8B",
-    draft_model_id="Qwen/Qwen3-1.7B",
-    target_quantize_4bit=False,
-    target_vram_estimate_gb=16.7,
-    draft_vram_estimate_gb=6.1,
-)
-
-PAIR_C = ModelPairConfig(
-    pair_id="C",
-    target_model_id="Qwen/Qwen3-8B",
-    draft_model_id="Qwen/Qwen3-0.6B",
-    target_quantize_4bit=True,
-    target_vram_estimate_gb=4.3,
-    draft_vram_estimate_gb=3.9,
-)
-
 # Pair F — Gemma 3 12B (4-bit target) + Gemma 3 1B (bf16 draft)
-# Inference VRAM: ~6.6 + 2.0 = ~8.6 GB.  Within-family tokenizer (262K vocab).
+# Inference VRAM: ~6.6 + 2.0 = ~8.6 GB.
 PAIR_F = ModelPairConfig(
     pair_id="F",
     target_model_id="google/gemma-3-12b-it",
@@ -96,7 +69,7 @@ PAIR_F = ModelPairConfig(
 )
 
 # Pair G — Gemma 4 31B (4-bit target) + Gemma 3 1B (bf16 draft)
-# Inference VRAM: ~15.5 + 2.0 = ~17.5 GB.  Large target → very low draft overhead ratio.
+# Inference VRAM: ~15.5 + 2.0 = ~17.5 GB.
 PAIR_G = ModelPairConfig(
     pair_id="G",
     target_model_id="google/gemma-4-31B",
@@ -110,10 +83,8 @@ PAIR_G = ModelPairConfig(
 # Grid constants
 # ---------------------------------------------------------------------------
 
-# Qwen pairs (A, B, C) kept in PAIR_MAP for reference but excluded from the
-# active evaluation grid — only Gemma pairs run by default.
 ALL_PAIRS = [PAIR_F, PAIR_G]
-PAIR_MAP = {p.pair_id: p for p in [PAIR_A, PAIR_B, PAIR_C, PAIR_F, PAIR_G]}
+PAIR_MAP = {p.pair_id: p for p in ALL_PAIRS}
 
 ALL_GAMMAS = [1, 5, 10]
 ALL_TEMPERATURES = [0.0]  # greedy-only evaluation
@@ -171,7 +142,7 @@ class Eagle3PairConfig:
 
 @dataclass
 class Eagle3ExperimentConfig:
-    """A single EAGLE-3 experiment configuration."""
+    """A single EAGLE-3 experiment configuration for active Gemma runs."""
 
     pair: Eagle3PairConfig
     tree_budget: int
@@ -196,32 +167,13 @@ class Eagle3ExperimentConfig:
             json.dump(self.to_dict(), f, indent=2)
 
 
-# Pre-built EAGLE-3 pair definitions
-
-_DEFAULT_CKPT = os.environ.get(
-    "EAGLE3_CHECKPOINT",
-    os.path.join(_CODE_DIR, "checkpoints", "eagle3", "eagle3_final.pt"),
-)
-
-EAGLE3_PAIR_D = Eagle3PairConfig(
-    pair_id="D",
-    target_model_id="Qwen/Qwen3-8B",
-    target_quantize_4bit=False,
-    checkpoint_path=_DEFAULT_CKPT,
-    target_vram_estimate_gb=16.7,
-)
-
-EAGLE3_PAIR_E = Eagle3PairConfig(
-    pair_id="E",
-    target_model_id="Qwen/Qwen3-8B",
-    target_quantize_4bit=True,
-    checkpoint_path=_DEFAULT_CKPT,
-    target_vram_estimate_gb=4.3,
-)
+# Active EAGLE-3 pair definition
 
 _GEMMA4_CKPT = os.environ.get(
     "EAGLE3_GEMMA4_CHECKPOINT",
-    os.path.join(_CODE_DIR, "checkpoints", "eagle3", "eagle3_gemma4_31b_final.pt"),
+    os.path.join(
+        _CODE_DIR, "checkpoints", "eagle3", "gemma4_31b", "eagle3_gemma4_31b_final.pt"
+    ),
 )
 
 # Pair H — EAGLE-3 with Gemma 4 31B (4-bit) target.
@@ -238,9 +190,8 @@ EAGLE3_PAIR_H = Eagle3PairConfig(
     target_vram_estimate_gb=15.5,
 )
 
-# Qwen EAGLE-3 pairs (D, E) kept in map for reference; only Gemma H runs by default.
 ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_H]
-EAGLE3_PAIR_MAP = {p.pair_id: p for p in [EAGLE3_PAIR_D, EAGLE3_PAIR_E, EAGLE3_PAIR_H]}
+EAGLE3_PAIR_MAP = {p.pair_id: p for p in ALL_EAGLE3_PAIRS}
 
 ALL_TREE_BUDGETS = [20, 60]
 

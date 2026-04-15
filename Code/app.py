@@ -1,6 +1,6 @@
 """
 Streamlit demo: side-by-side comparison of baseline autoregressive decoding
-vs speculative decoding on Qwen3 models.
+vs speculative decoding on active Gemma model pairs.
 
 Run with:
     streamlit run app.py --server.port 8501 --server.address 0.0.0.0
@@ -28,9 +28,6 @@ st.set_page_config(
 # ── Pair descriptions for the sidebar ────────────────────────────────────
 
 PAIR_LABELS = {
-    "A": "Pair A  —  Qwen3-8B (fp16) + Qwen3-0.6B  (~20.6 GB)",
-    "B": "Pair B  —  Qwen3-8B (fp16) + Qwen3-1.7B  (~22.8 GB)",
-    "C": "Pair C  —  Qwen3-8B (4-bit) + Qwen3-0.6B  (~8.2 GB)",
     "F": "Pair F  —  Gemma3-12B (4-bit) + Gemma3-1B  (~8.6 GB)",
     "G": "Pair G  —  Gemma4-31B (4-bit) + Gemma3-1B  (~17.5 GB)",
 }

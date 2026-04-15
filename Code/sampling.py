@@ -24,12 +24,15 @@ def sample_from_logits(
         generator: Optional torch generator for reproducibility.
 
     Returns:
-        (token_id, probs) where probs is the full distribution, or None for greedy
-        (skipping the softmax over the full vocab saves significant compute at T=0).
+        (token_id, probs) where probs is the full distribution. In greedy mode we
+        return a one-hot distribution so callers and tests can treat both paths
+        uniformly.
     """
     if temperature == 0.0:
         token_id = int(logits.argmax(dim=-1).item())
-        return token_id, None  # None signals greedy; callers must handle this
+        probs = torch.zeros_like(logits)
+        probs[token_id] = 1.0
+        return token_id, probs
 
     scaled_logits = logits / temperature
     probs = F.softmax(scaled_logits, dim=-1)
@@ -61,15 +64,6 @@ def rejection_sample_token(
     """
     if temperature == 0.0:
         # Greedy: accept iff the target's argmax matches the draft token.
-        # target_probs may be None (greedy path returns None from sample_from_logits).
-        # In that case we need to evaluate argmax from the stored logits — but since
-        # callers using the vectorized path in _verify_step handle greedy differently,
-        # this branch is a fallback for the legacy single-token path.
-        if target_probs is None:
-            raise ValueError(
-                "rejection_sample_token called with target_probs=None in greedy mode. "
-                "Use the vectorized batch_rejection_sample instead."
-            )
         target_argmax = int(target_probs.argmax(dim=-1).item())
         if target_argmax == draft_token:
             return True, draft_token
