@@ -60,6 +60,10 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
 
     Supports DynamicCache (transformers 5.x and 4.x) and legacy tuple-of-tuples.
     Returns the trimmed cache (modifies in-place for DynamicCache).
+
+    Some Gemma sliding-window cache layers cannot be cropped once they have
+    advanced past the sliding window. In that case we return None so the caller
+    can rebuild the cache from the accepted prefix on the next round.
     """
     if past_key_values is None:
         return None
@@ -69,7 +73,15 @@ def _trim_kv_cache(past_key_values, target_seq_len: int):
         return past_key_values
 
     if hasattr(past_key_values, "crop"):
-        past_key_values.crop(target_seq_len)
+        try:
+            past_key_values.crop(target_seq_len)
+        except ValueError as exc:
+            if "DynamicSlidingWindowLayer" not in str(exc):
+                raise
+            logger.warning(
+                "KV cache crop unsupported for sliding-window layer; rebuilding cache next round"
+            )
+            return None
         return past_key_values
 
     if hasattr(past_key_values, "key_cache"):
@@ -418,13 +430,13 @@ def speculative_decode(
         accepted_tokens = verify_result["accepted_tokens"]
         num_accepted = verify_result["num_accepted"]
         target_cache = verify_result["target_cache"]
-        target_cache_len = cur_pos + num_accepted
+        target_cache_len = cur_pos + num_accepted if target_cache is not None else 0
         verify_ms = verify_result["elapsed_ms"]
 
         # Trim draft cache to match accepted prefix
         draft_keep_len = cur_pos + num_accepted
         draft_cache = _trim_kv_cache(draft_cache, draft_keep_len)
-        draft_cache_len = draft_keep_len
+        draft_cache_len = draft_keep_len if draft_cache is not None else 0
 
         # Write accepted tokens into the buffer and advance cur_pos
         n_to_add = min(len(accepted_tokens), remaining)
