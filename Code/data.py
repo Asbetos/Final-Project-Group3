@@ -9,6 +9,19 @@ from transformers import AutoTokenizer
 
 logger = logging.getLogger(__name__)
 
+
+def _fallback_chat_text(system_prompt: str, user_prompt: str, assistant_text: str = "") -> str:
+    """Format a simple text prompt when the tokenizer has no chat template."""
+    sections = [
+        f"System: {system_prompt}",
+        f"User: {user_prompt}",
+    ]
+    if assistant_text:
+        sections.append(f"Assistant: {assistant_text}")
+    else:
+        sections.append("Assistant:")
+    return "\n\n".join(sections)
+
 # ---------------------------------------------------------------------------
 # Task registry — all dataset-specific details in one declarative structure
 # ---------------------------------------------------------------------------
@@ -100,6 +113,9 @@ def format_prompt_for_chat(
         {"role": "user", "content": raw_prompt},
     ]
 
+    if not getattr(tokenizer, "chat_template", None):
+        return _fallback_chat_text(system_prompt, raw_prompt)
+
     try:
         if _is_qwen_tokenizer(tokenizer):
             formatted = tokenizer.apply_chat_template(
@@ -115,14 +131,7 @@ def format_prompt_for_chat(
                 add_generation_prompt=True,
             )
     except Exception:
-        fallback_messages = [
-            {"role": "user", "content": f"{system_prompt}\n\n{raw_prompt}"},
-        ]
-        formatted = tokenizer.apply_chat_template(
-            fallback_messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
+        formatted = _fallback_chat_text(system_prompt, raw_prompt)
     return formatted
 
 

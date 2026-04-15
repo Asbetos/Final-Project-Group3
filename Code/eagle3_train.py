@@ -27,7 +27,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from eagle3 import Eagle3Config, Eagle3DraftHead
 from models import load_model, load_tokenizer, get_device
-from data import _is_qwen_tokenizer
+from data import _fallback_chat_text, _is_qwen_tokenizer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -114,25 +114,26 @@ class AlpacaDataset(Dataset):
                 {"role": "assistant", "content": output_text},
             ]
 
-            try:
-                if _is_qwen_tokenizer(tokenizer):
-                    text = tokenizer.apply_chat_template(
-                        messages, tokenize=False, enable_thinking=False
-                    )
-                else:
-                    text = tokenizer.apply_chat_template(messages, tokenize=False)
-            except Exception:
-                fallback_messages = [
-                    {
-                        "role": "user",
-                        "content": f"You are a helpful assistant.\n\n{user_content}",
-                    },
-                    {"role": "assistant", "content": output_text},
-                ]
-                text = tokenizer.apply_chat_template(
-                    fallback_messages,
-                    tokenize=False,
+            if not getattr(tokenizer, "chat_template", None):
+                text = _fallback_chat_text(
+                    "You are a helpful assistant.",
+                    user_content,
+                    output_text,
                 )
+            else:
+                try:
+                    if _is_qwen_tokenizer(tokenizer):
+                        text = tokenizer.apply_chat_template(
+                            messages, tokenize=False, enable_thinking=False
+                        )
+                    else:
+                        text = tokenizer.apply_chat_template(messages, tokenize=False)
+                except Exception:
+                    text = _fallback_chat_text(
+                        "You are a helpful assistant.",
+                        user_content,
+                        output_text,
+                    )
             encoded = tokenizer(
                 text,
                 return_tensors="pt",
