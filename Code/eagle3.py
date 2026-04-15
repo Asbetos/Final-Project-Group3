@@ -218,9 +218,13 @@ class Eagle3DraftHead(nn.Module):
             if attn is not None:
                 self.rotary_emb = getattr(attn, "rotary_emb", None)
         self._rotary_requires_layer_type = False
+        self._rotary_layer_type = None
         if self.rotary_emb is not None:
             rotary_params = inspect.signature(self.rotary_emb.forward).parameters
             self._rotary_requires_layer_type = "layer_type" in rotary_params
+            if self._rotary_requires_layer_type:
+                attn = getattr(self.decoder_layer, "self_attn", None)
+                self._rotary_layer_type = getattr(attn, "layer_type", None)
 
         # Inspect the decoder layer's forward() signature once at init so we
         # can pass the correct kwargs for each model family in forward().
@@ -278,13 +282,16 @@ class Eagle3DraftHead(nn.Module):
             self._layer_kv_kwarg: past_key_values,
         }
 
-        if (
-            self._layer_has_position_embeddings
-            and self.rotary_emb is not None
-            and not self._rotary_requires_layer_type
-        ):
+        if self._layer_has_position_embeddings and self.rotary_emb is not None:
             # Pre-compute RoPE at model level and pass it through when supported.
-            position_embeddings = self.rotary_emb(combined, position_ids)
+            if self._rotary_requires_layer_type:
+                position_embeddings = self.rotary_emb(
+                    combined,
+                    position_ids,
+                    layer_type=self._rotary_layer_type,
+                )
+            else:
+                position_embeddings = self.rotary_emb(combined, position_ids)
             decoder_kwargs["position_ids"] = position_ids
             decoder_kwargs["position_embeddings"] = position_embeddings
         elif (
