@@ -164,8 +164,8 @@ def batch_rejection_sample(
         accept_probs = torch.where(q_vals < 1e-9, torch.zeros_like(accept_probs), accept_probs)
 
     # Generate all random numbers in one call (CPU generator avoids GPU kernel launch overhead)
-    u = torch.rand(gamma, generator=generator)  # (gamma,) on CPU
-    accepted_mask = u < accept_probs.cpu()      # (gamma,) bool
+    u = torch.rand(gamma,device=device, generator=generator)  # (gamma,) on CPU
+    accepted_mask = u < accept_probs      # (gamma,) bool
 
     if accepted_mask.all():
         num_accepted = gamma

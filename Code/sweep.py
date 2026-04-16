@@ -16,6 +16,10 @@ from config import (
     ALL_EAGLE3_PAIRS,
 )
 
+_CODE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_OUTPUT_DIR = os.path.join(_CODE_DIR, "gemma_runs", "outputs")
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -33,12 +37,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--pairs",
         nargs="+",
-        default=["F", "G"],
-        choices=["F", "G"],
-        help=(
-            "Standard speculative pair IDs to run "
-            "(default: F G; F=Gemma3-12B+1B, G=Gemma4-31B+1B)"
-        ),
+        default=list(PAIR_MAP.keys()),
+        choices=list(PAIR_MAP.keys()),
+        help="Standard speculative pair IDs to run",
     )
     parser.add_argument(
         "--gammas",
@@ -71,12 +72,12 @@ def parse_args() -> argparse.Namespace:
         "--num-prompts",
         type=int,
         default=50,
-        help="Number of prompts per task (default: 50)",
+        help=f"Output directory (default: {DEFAULT_OUTPUT_DIR})",
     )
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="results",
+        default=DEFAULT_OUTPUT_DIR,
         help="Output directory (default: results)",
     )
     parser.add_argument(
