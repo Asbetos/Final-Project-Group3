@@ -30,10 +30,24 @@ def get_device() -> torch.device:
     return torch.device("cuda:0")
 
 
-def load_tokenizer(model_id: str) -> AutoTokenizer:
-    """Load the tokenizer for the requested model id."""
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    if tokenizer.pad_token is None:
+def load_tokenizer(model_id: str):
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True,)
+    except AttributeError as e:
+        # Gemma 4 tokenizer workaround:
+        # HF tokenizer_config can expose extra_special_tokens as a list,
+        # but this loading path expects a mapping-like object.
+        if "has no attribute 'keys'" in str(e) and "gemma-4" in model_id.lower():
+            print(f"[WARN] Retrying tokenizer load for {model_id} with sanitized extra_special_tokens")
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_id,
+                trust_remote_code=True,
+                extra_special_tokens={},
+            )
+        else:
+            raise
+
+    if tokenizer.pad_token is None and tokenizer.eos_token is not None:
         tokenizer.pad_token = tokenizer.eos_token
     return tokenizer
 
@@ -42,7 +56,7 @@ def load_model(
     model_id: str,
     quantize_4bit: bool = False,
     device: torch.device = None,
-    compile_model: bool = True,
+    compile_model: bool = False,
 ) -> torch.nn.Module:
     """
     Load a single target model for inference or EAGLE-3 training.
@@ -50,30 +64,15 @@ def load_model(
     Args:
         model_id: HuggingFace model identifier.
         quantize_4bit: If True, apply NF4 4-bit quantization via bitsandbytes.
-        device: Target device (defaults to cuda:0).
+        compile_model: Whether to apply torch.compile (kept False for stability).
 
     Returns:
         The loaded model in eval mode with gradients disabled.
     """
-    device = device or get_device()
-
-    load_kwargs = dict(
-        trust_remote_code=True,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="sdpa",
-    )
-
-    if quantize_4bit:
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        )
-        load_kwargs["quantization_config"] = bnb_config
-        load_kwargs["device_map"] = {"": device}
-
     logger.info("Loading model %s (4-bit=%s) ...", model_id, quantize_4bit)
+    os.makedirs("offload", exist_ok=True)
+
+    #1)  Inspect model config and choose the right HF model class
     model_config = AutoConfig.from_pretrained(model_id, trust_remote_code=True)
     architectures = getattr(model_config, "architectures", []) or []
     is_conditional_generation = any(
@@ -83,11 +82,26 @@ def load_model(
     if is_conditional_generation and AutoModelForImageTextToText is not None:
         model_cls = AutoModelForImageTextToText
 
+    # 2) Build loading kwargs
+    load_kwargs = {
+        "trust_remote_code": True,
+        "device_map": "auto",
+        "low_cpu_mem_usage": True,
+        "offload_folder": "offload",
+        "offload_state_dict": True,
+        "torch_dtype": torch.bfloat16,
+    }
+
+    if quantize_4bit:
+        load_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+
+    # 3) Load model
     model = model_cls.from_pretrained(model_id, **load_kwargs)
-
-    if not quantize_4bit:
-        model = model.to(device=device, dtype=torch.bfloat16)
-
     model.eval()
 
     # torch.compile disabled — CUDA graphs conflict with dynamic KV cache
@@ -117,10 +131,15 @@ def load_model_pair(pair: ModelPairConfig):
     target_model = load_model(
         pair.target_model_id,
         quantize_4bit=pair.target_quantize_4bit,
+        compile_model=False,
     )
     target_vram = torch.cuda.memory_allocated() / (1024 ** 3)
 
-    draft_model = load_model(pair.draft_model_id, quantize_4bit=pair.draft_quantize_4bit)
+    draft_model = load_model(
+        pair.draft_model_id,
+        quantize_4bit=pair.draft_quantize_4bit,
+        compile_model=False,
+    )
     total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
 
     logger.info(

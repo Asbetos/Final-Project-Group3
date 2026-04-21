@@ -75,8 +75,9 @@ PAIR_G = ModelPairConfig(
     target_model_id="google/gemma-4-31B",
     draft_model_id="google/gemma-3-1b-it",
     target_quantize_4bit=True,
-    target_vram_estimate_gb=15.5,
-    draft_vram_estimate_gb=2.0,
+    draft_quantize_4bit=False,
+    target_vram_estimate_gb=17.5,
+    draft_vram_estimate_gb=2.0
 )
 
 # ---------------------------------------------------------------------------

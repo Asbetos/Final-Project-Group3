@@ -10,6 +10,27 @@ import torch.nn.functional as F
 from typing import List, Optional, Tuple
 
 
+def align_shared_vocab(
+    target_probs: torch.Tensor,
+    draft_probs: Optional[torch.Tensor],
+):
+    """
+    Restrict target/draft distributions to the shared vocab prefix.
+    """
+    if draft_probs is None:
+        return target_probs, None, target_probs.shape[-1]
+
+    common_vocab = min(target_probs.shape[-1], draft_probs.shape[-1])
+
+    target_probs = target_probs[..., :common_vocab]
+    draft_probs = draft_probs[..., :common_vocab]
+
+    target_probs = target_probs / target_probs.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+    draft_probs = draft_probs / draft_probs.sum(dim=-1, keepdim=True).clamp_min(1e-12)
+
+    return target_probs, draft_probs, common_vocab
+
+
 def sample_from_logits(
     logits: torch.Tensor,
     temperature: float,
@@ -147,6 +168,13 @@ def batch_rejection_sample(
     # Stochastic path — batch softmax over all gamma positions at once
     target_probs_batch = F.softmax(target_logits_batch / temperature, dim=-1)  # (gamma, vocab)
 
+    common_vocab = target_probs_batch.shape[-1]
+    if draft_probs_batch is not None:
+        target_probs_batch, draft_probs_batch, common_vocab = align_shared_vocab(
+            target_probs_batch, draft_probs_batch
+        )
+
+
     idx = torch.arange(gamma, device=device)
 
     if draft_probs_batch is None:
@@ -163,7 +191,8 @@ def batch_rejection_sample(
         # token (q→0), the residual distribution handles resampling correctly.
         accept_probs = torch.where(q_vals < 1e-9, torch.zeros_like(accept_probs), accept_probs)
 
-    # Generate all random numbers in one call (CPU generator avoids GPU kernel launch overhead)
+    # Generate all random numbers on the same device as the target logits
+    # to avoid device-mismatch issues during stochastic verification.
     u = torch.rand(gamma,device=device, generator=generator)  # (gamma,) on CPU
     accepted_mask = u < accept_probs      # (gamma,) bool
 
@@ -201,6 +230,14 @@ def sample_residual_distribution(
     """
     if draft_probs is None:
         return int(torch.multinomial(target_probs, num_samples=1, generator=generator).item())
+
+    # -------------------------------------------------------------------
+    # Workaround:
+    # Align target and draft probabilities to the shared vocab space before
+    # computing the residual distribution. Otherwise, vocab-size mismatch
+    # can break the subtraction target_probs - draft_probs.
+    # -------------------------------------------------------------------
+    target_probs, draft_probs, _ = align_shared_vocab(target_probs, draft_probs)
 
     residual = torch.clamp(target_probs - draft_probs, min=0.0)
     total = residual.sum()

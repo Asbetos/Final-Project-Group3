@@ -8,11 +8,30 @@ import pandas as pd
 import seaborn as sns
 
 
-def load_master_csv(path: str = "results/summary.csv") -> pd.DataFrame:
-    """Load the aggregated results CSV into a DataFrame."""
-    df = pd.read_csv(path)
+#def load_master_csv(path: str = "results/summary.csv") -> pd.DataFrame:
+#    """Load the aggregated results CSV into a DataFrame."""
+#    df = pd.read_csv(path)
+#    df["temperature"] = df["temperature"].astype(float)
+#    df["gamma"] = df["gamma"].astype(int)
+#    return df
+
+def load_master_csv(paths=None) -> pd.DataFrame:
+    """Load one or more aggregated results CSVs into a single DataFrame."""
+    if paths is None:
+        paths = [
+            "Code/gemma_runs/outputs/F_final/summary.csv",
+            "Code/gemma_runs/outputs/G_final/summary.csv",
+        ]
+
+    dfs = [pd.read_csv(p) for p in paths]
+    df = pd.concat(dfs, ignore_index=True).drop_duplicates()
+
     df["temperature"] = df["temperature"].astype(float)
     df["gamma"] = df["gamma"].astype(int)
+
+    if "is_eagle3" not in df.columns:
+        df["is_eagle3"] = False
+
     return df
 
 
@@ -358,14 +377,14 @@ def plot_vram_usage(df: pd.DataFrame, output_dir: str = "figures") -> None:
 
 
 def generate_all_plots(
-    csv_path: str = "results/summary.csv",
-    output_dir: str = "figures",
+    csv_paths = None,
+    output_dir: str = "Code/figures/FG_final",
 ) -> None:
     """Run all plot functions from the master CSV."""
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"Loading results from {csv_path}")
-    df = load_master_csv(csv_path)
+    print(f"Loading results from {csv_paths}")
+    df = load_master_csv(csv_paths)
     print(f"Loaded {len(df)} rows")
 
     plot_speedup_vs_gamma(df, output_dir)
@@ -396,4 +415,10 @@ def generate_all_plots(
 
 
 if __name__ == "__main__":
-    generate_all_plots()
+    generate_all_plots(
+        csv_paths=[
+            "Code/gemma_runs/outputs/F_final/summary.csv",
+            "Code/gemma_runs/outputs/G_final/summary.csv",
+        ],
+        output_dir="Code/figures/FG_final",
+    )
