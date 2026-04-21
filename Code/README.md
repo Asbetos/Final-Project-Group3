@@ -1,142 +1,66 @@
-## Gemma Speculative Decoding
+# Gemma Runs Notes
 
-This project benchmarks speculative decoding on active **Gemma** model pairs and trains an **EAGLE-3** draft head for the Gemma-4-31B target.
-
-Active scope:
-- Standard speculative decoding: `F`, `G`
-- EAGLE-3: `H`
-- Qwen artifacts and historical results are archived under `Code/archive/qwen_legacy/`
+## Current status
+This folder tracks experimental progress on active Gemma speculative decoding 
 
 ### Active Pairs
+#### Pair F
+- Target: `google/gemma-3-12b-it`
+- Draft: `google/gemma-3-1b-it`
 
-| Pair | Method | Target Model | Draft Model / Head | Quantization | Estimated VRAM |
-|---|---|---|---|---|---|
-| `F` | Standard speculative | `google/gemma-3-12b-it` | `google/gemma-3-1b-it` | 4-bit target | ~8.6 GB |
-| `G` | Standard speculative | `google/gemma-4-31B` | `google/gemma-3-1b-it` | 4-bit target | ~17.5 GB |
-| `H` | EAGLE-3 | `google/gemma-4-31B` | trained EAGLE-3 draft head | 4-bit target | ~16.3 GB inference |
+#### Pair G
+- Target: `google/gemma-4-31B`
+- Draft: `google/gemma-3-1b-it`
 
-### Hardware
+## What has been completed
+- Environment setup on AWS `g5.2xlarge` (A10G, 24GB VRAM)
+- Hugging Face access/authentication for Gemma models
+- Standard speculative benchmark runs completed for active Gemma pairs `F` and `G`
+- Sweeps completed across:
+  - tasks: `humaneval`, `triviaqa`, `cnn_dailymail`, `writingprompts`
+  - gammas: `1, 3, 5, 7, 10`
+  - temperatures: `0.0, 0.6, 1.0`
+- Final summaries generated under:
+  - `Code/gemma_runs/outputs/F_final/summary.csv`
+  - `Code/gemma_runs/outputs/G_final/summary.csv`
+- F vs G comparison visualizations generated under:
+  - `Code/figures/FG_final/`
 
-- Local benchmarking target: AWS `g5.2xlarge` (`A10G`, 24 GB VRAM)
-- Recommended EAGLE-3 training target for pair `H`: `H100` on Lightning.ai
-- System RAM: `32 GB+`
-- Disk: enough for Gemma model caches and checkpoints (`60 GB+` practical minimum)
+## Why gamma and temperature were swept
+- `gamma` controls speculation length, or how many draft tokens are proposed before target verification.
+- Increasing `gamma` tests whether longer draft proposals improve throughput enough to offset extra verification overhead.
+- `temperature` controls sampling randomness.
+- Sweeping `temperature` tests whether speculative decoding remains effective beyond greedy decoding, especially under more stochastic generation settings.
 
-### Setup
+## Main observations so far
+- Pair `F` is generally more stable than Pair `G` across tasks and temperatures.
+- Pair `F` achieves higher speedup across all evaluated tasks in the current F vs G comparison plots.
+- Pair `G` is more sensitive to higher temperatures, especially at `T=1.0`, where acceptance and speedup drop more noticeably.
+- Pair `G` uses substantially more VRAM than Pair `F`, although both still fit within the 24GB A10G memory limit.
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+## Code changes
+- `Code/models.py`
+  - Added a Gemma-4 tokenizer fallback for compatibility.
+  - Switched model loading to an auto/offload-based flow so large Gemma models could be loaded more reliably in our AWS GPU environment, while keeping the existing 4-bit quantization path.
+- `Code/sampling.py`
+  - Updated stochastic batch rejection sampling to generate random values on the same device as the target logits, avoiding device mismatch during non-zero temperature runs.
+  - Added shared-vocabulary alignment for target and draft distributions to handle vocab-size mismatch during speculative comparison and residual sampling.
+- `Code/sweep.py`
+  - Updated output path handling to organize runs under `Code/gemma_runs/outputs/`.
+- `Code/visualize.py`
+  - Updated visualization flow to compare active Gemma pairs `F` and `G` from their final summary files.
 
-Gemma model downloads may require Hugging Face access approval and authentication.
+## Files included here
+- `Code/gemma_runs/outputs/F_final/`
+- `Code/gemma_runs/outputs/G_final/`
+- `Code/figures/FG_final/`
+- supporting code changes in:
+  - `models.py`
+  - `sampling.py`
+  - `sweep.py`
+  - `visualize.py`
 
-### Quick Start
-
-```bash
-source venv/bin/activate
-
-# Unit tests (no GPU)
-python3 test_correctness.py --level 1
-
-# Standard speculative smoke test on Gemma pair F
-python3 test_correctness.py --level 3 --pair F
-
-# EAGLE-3 smoke test on Gemma pair H
-python3 test_correctness.py --level 6 --pair H
-
-# Preview the active Gemma sweep
-python3 sweep.py --dry-run --eagle3
-```
-
-### Run Standard Gemma Benchmarks
-
-```bash
-# Pair F only
-python3 sweep.py --pairs F
-
-# Pair G only
-python3 sweep.py --pairs G
-
-# Both active standard pairs
-python3 sweep.py --pairs F G
-```
-
-### Train The Active EAGLE-3 Head
-
-Pair `H` is the only active EAGLE-3 training target.
-
-```bash
-python3 eagle3_train.py \
-  --target-model google/gemma-4-31B \
-  --target-4bit \
-  --checkpoint-dir checkpoints/eagle3/gemma4_31b \
-  --final-checkpoint-name eagle3_gemma4_31b_final.pt
-```
-
-Recommended training environment:
-- `H100` on Lightning.ai
-- keep `--batch-size 1`
-- keep `--grad-accum 8` unless profiling suggests otherwise
-
-Quick startup validation on a smaller box:
-
-```bash
-python3 eagle3_train.py \
-  --num-samples 8 \
-  --epochs 1 \
-  --batch-size 1 \
-  --grad-accum 1 \
-  --max-seq-len 128 \
-  --checkpoint-dir checkpoints/eagle3/gemma4_31b_smoke
-```
-
-### Run EAGLE-3 Benchmarks
-
-```bash
-export EAGLE3_GEMMA4_CHECKPOINT="$PWD/checkpoints/eagle3/gemma4_31b/eagle3_gemma4_31b_final.pt"
-python3 sweep.py --eagle3 --eagle3-only --eagle3-pairs H
-```
-
-### App
-
-The Streamlit demo covers the active standard Gemma pairs only (`F`, `G`).
-
-```bash
-streamlit run app.py --server.port 8501 --server.address 0.0.0.0
-```
-
-### Outputs
-
-```text
-results/
-  baseline/
-  speculative/
-  eagle3/
-  summary.csv
-
-checkpoints/
-  eagle3/
-    gemma4_31b/
-      eagle3_gemma4_31b_final.pt
-
-archive/
-  qwen_legacy/
-```
-
-### Validation Checklist
-
-```bash
-python3 test_correctness.py --level 1
-python3 test_correctness.py --level 3 --pair F
-python3 test_correctness.py --level 3 --pair G
-python3 test_correctness.py --level 6 --pair H
-python3 sweep.py --dry-run --pairs F G --eagle3 --eagle3-pairs H
-```
-
-### Notes
-
-- Active development is Gemma-only.
-- Qwen checkpoints, logs, and results are retained only as archived legacy artifacts.
-- If you need to revisit Qwen comparisons, use the archived data rather than the active configs and scripts.
+## Next step
+- Integrate Pair `H` (EAGLE-3)
+- Update comparison plots to include `H`
+- Use the final figures in the project report and presentation
