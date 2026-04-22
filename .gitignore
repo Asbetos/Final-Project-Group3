@@ -34,3 +34,27 @@ Code/archive/qwen_legacy/results/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Files
+Code/archive/
+Code/documentation/
+Code/figures/previous_figures/
+Code/app.py
+Code/eagle3_train.py
+Code/eagle3.py
+Code/test.py
+Code/test_correctness.py
+
+#Folders
+docs/
+figures/
+Final-Group-Presentation/
+Final-Group-Project-Report/
+Group-Proposal/
+jeongmin-an-individual-project/
+manoj-kodihalli-individual-project/
+offload/
+venkatesh-nagarjuna-individual-project/
+diag_config.py
+sweep_standard.log

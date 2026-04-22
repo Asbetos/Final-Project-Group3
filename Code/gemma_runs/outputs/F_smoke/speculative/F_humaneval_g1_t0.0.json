@@ -1,0 +1,2230 @@
+{
+  "config": {
+    "pair": {
+      "pair_id": "F",
+      "target_model_id": "google/gemma-3-12b-it",
+      "draft_model_id": "google/gemma-3-1b-it",
+      "target_quantize_4bit": true,
+      "target_vram_estimate_gb": 6.6,
+      "draft_vram_estimate_gb": 2.0,
+      "draft_quantize_4bit": false
+    },
+    "gamma": 1,
+    "temperature": 0.0,
+    "task": "humaneval",
+    "max_new_tokens": 128,
+    "num_prompts": 3,
+    "num_warmup": 3,
+    "seed": 42
+  },
+  "summary": {
+    "tokens_per_second": {
+      "mean": 9.312377287056677,
+      "std": 0.06994422493743169,
+      "p95": 9.369227023418787
+    },
+    "acceptance_rate": {
+      "mean": 0.6316239316239316,
+      "std": 0.022965861269306692,
+      "p95": 0.6525641025641026
+    },
+    "acceptance_length": {
+      "mean": 0.6316239316239316,
+      "std": 0.022965861269306692,
+      "p95": 0.6525641025641026
+    },
+    "ttft_ms": {
+      "mean": 206.5991169999203,
+      "std": 16.83858561225123,
+      "p95": 221.27301430000443
+    },
+    "wall_clock_ms": {
+      "mean": 13745.926928332969,
+      "std": 103.76450807402163,
+      "p95": 13871.300537599473
+    },
+    "draft_overhead_ratio": {
+      "mean": 0.21079717312735616,
+      "std": 0.0004365243188870014,
+      "p95": 0.2113085627271297
+    },
+    "peak_vram_gb": {
+      "mean": 9.38827117284139,
+      "std": 0.03562954237266391,
+      "p95": 9.414318752288818
+    },
+    "total_tokens": {
+      "mean": 128.0,
+      "std": 0.0,
+      "p95": 128.0
+    }
+  },
+  "per_prompt": [
+    {
+      "prompt_index": 0,
+      "total_tokens": 128,
+      "rounds": 80,
+      "wall_clock_ms": 13891.77,
+      "ttft_ms": 183.17,
+      "tps": 9.21,
+      "acceptance_rate": 0.6,
+      "acceptance_length": 0.6,
+      "draft_overhead": 0.2114,
+      "peak_vram_gb": 9.34,
+      "round_details": [
+        {
+          "round": 0,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.08,
+          "verify_ms": 145.82
+        },
+        {
+          "round": 1,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.34,
+          "verify_ms": 137.25
+        },
+        {
+          "round": 2,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.45,
+          "verify_ms": 134.1
+        },
+        {
+          "round": 3,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.47,
+          "verify_ms": 134.31
+        },
+        {
+          "round": 4,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 133.79
+        },
+        {
+          "round": 5,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.22,
+          "verify_ms": 134.25
+        },
+        {
+          "round": 6,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 133.89
+        },
+        {
+          "round": 7,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 134.0
+        },
+        {
+          "round": 8,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.37,
+          "verify_ms": 134.66
+        },
+        {
+          "round": 9,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.38,
+          "verify_ms": 134.6
+        },
+        {
+          "round": 10,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.27,
+          "verify_ms": 133.57
+        },
+        {
+          "round": 11,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.34,
+          "verify_ms": 139.72
+        },
+        {
+          "round": 12,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.52,
+          "verify_ms": 134.07
+        },
+        {
+          "round": 13,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.36,
+          "verify_ms": 133.85
+        },
+        {
+          "round": 14,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.25,
+          "verify_ms": 133.96
+        },
+        {
+          "round": 15,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.44,
+          "verify_ms": 134.35
+        },
+        {
+          "round": 16,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.28,
+          "verify_ms": 134.23
+        },
+        {
+          "round": 17,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.18,
+          "verify_ms": 134.35
+        },
+        {
+          "round": 18,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.34,
+          "verify_ms": 134.39
+        },
+        {
+          "round": 19,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.25,
+          "verify_ms": 134.52
+        },
+        {
+          "round": 20,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.26,
+          "verify_ms": 134.41
+        },
+        {
+          "round": 21,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.52,
+          "verify_ms": 134.2
+        },
+        {
+          "round": 22,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.23,
+          "verify_ms": 134.7
+        },
+        {
+          "round": 23,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.27,
+          "verify_ms": 134.02
+        },
+        {
+          "round": 24,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.13,
+          "verify_ms": 134.22
+        },
+        {
+          "round": 25,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.07,
+          "verify_ms": 134.2
+        },
+        {
+          "round": 26,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.11,
+          "verify_ms": 134.61
+        },
+        {
+          "round": 27,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.41,
+          "verify_ms": 134.07
+        },
+        {
+          "round": 28,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.22,
+          "verify_ms": 134.31
+        },
+        {
+          "round": 29,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.27,
+          "verify_ms": 134.33
+        },
+        {
+          "round": 30,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.2,
+          "verify_ms": 137.96
+        },
+        {
+          "round": 31,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.57,
+          "verify_ms": 136.98
+        },
+        {
+          "round": 32,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.05,
+          "verify_ms": 134.38
+        },
+        {
+          "round": 33,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.38,
+          "verify_ms": 139.26
+        },
+        {
+          "round": 34,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.9,
+          "verify_ms": 137.48
+        },
+        {
+          "round": 35,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.86,
+          "verify_ms": 137.13
+        },
+        {
+          "round": 36,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.56,
+          "verify_ms": 134.34
+        },
+        {
+          "round": 37,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.34,
+          "verify_ms": 139.26
+        },
+        {
+          "round": 38,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.42,
+          "verify_ms": 137.89
+        },
+        {
+          "round": 39,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.92,
+          "verify_ms": 140.08
+        },
+        {
+          "round": 40,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.42,
+          "verify_ms": 139.9
+        },
+        {
+          "round": 41,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.94,
+          "verify_ms": 140.07
+        },
+        {
+          "round": 42,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.72,
+          "verify_ms": 137.96
+        },
+        {
+          "round": 43,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.67,
+          "verify_ms": 138.46
+        },
+        {
+          "round": 44,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.45,
+          "verify_ms": 136.2
+        },
+        {
+          "round": 45,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.33,
+          "verify_ms": 139.09
+        },
+        {
+          "round": 46,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.81,
+          "verify_ms": 140.28
+        },
+        {
+          "round": 47,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.88,
+          "verify_ms": 137.22
+        },
+        {
+          "round": 48,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.48,
+          "verify_ms": 134.72
+        },
+        {
+          "round": 49,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.71,
+          "verify_ms": 139.45
+        },
+        {
+          "round": 50,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.62,
+          "verify_ms": 137.97
+        },
+        {
+          "round": 51,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.79,
+          "verify_ms": 139.55
+        },
+        {
+          "round": 52,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 38.07,
+          "verify_ms": 134.65
+        },
+        {
+          "round": 53,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.31,
+          "verify_ms": 139.36
+        },
+        {
+          "round": 54,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.31,
+          "verify_ms": 138.11
+        },
+        {
+          "round": 55,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.73,
+          "verify_ms": 140.3
+        },
+        {
+          "round": 56,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.19,
+          "verify_ms": 135.17
+        },
+        {
+          "round": 57,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.36,
+          "verify_ms": 134.95
+        },
+        {
+          "round": 58,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.27,
+          "verify_ms": 134.24
+        },
+        {
+          "round": 59,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.38,
+          "verify_ms": 139.84
+        },
+        {
+          "round": 60,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.38,
+          "verify_ms": 140.32
+        },
+        {
+          "round": 61,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.57,
+          "verify_ms": 139.39
+        },
+        {
+          "round": 62,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.3,
+          "verify_ms": 134.99
+        },
+        {
+          "round": 63,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.36,
+          "verify_ms": 134.99
+        },
+        {
+          "round": 64,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.33,
+          "verify_ms": 139.17
+        },
+        {
+          "round": 65,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.42,
+          "verify_ms": 134.5
+        },
+        {
+          "round": 66,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 134.82
+        },
+        {
+          "round": 67,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.45,
+          "verify_ms": 135.36
+        },
+        {
+          "round": 68,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.22,
+          "verify_ms": 135.08
+        },
+        {
+          "round": 69,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.23,
+          "verify_ms": 134.72
+        },
+        {
+          "round": 70,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.36,
+          "verify_ms": 134.68
+        },
+        {
+          "round": 71,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.87,
+          "verify_ms": 140.26
+        },
+        {
+          "round": 72,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.35,
+          "verify_ms": 139.5
+        },
+        {
+          "round": 73,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.43,
+          "verify_ms": 138.42
+        },
+        {
+          "round": 74,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.79,
+          "verify_ms": 139.49
+        },
+        {
+          "round": 75,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 38.04,
+          "verify_ms": 140.44
+        },
+        {
+          "round": 76,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.39,
+          "verify_ms": 138.21
+        },
+        {
+          "round": 77,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.92,
+          "verify_ms": 140.26
+        },
+        {
+          "round": 78,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.04,
+          "verify_ms": 140.12
+        },
+        {
+          "round": 79,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.11,
+          "verify_ms": 136.06
+        }
+      ]
+    },
+    {
+      "prompt_index": 1,
+      "total_tokens": 128,
+      "rounds": 78,
+      "wall_clock_ms": 13658.94,
+      "ttft_ms": 222.01,
+      "tps": 9.37,
+      "acceptance_rate": 0.641,
+      "acceptance_length": 0.64,
+      "draft_overhead": 0.2103,
+      "peak_vram_gb": 9.41,
+      "round_details": [
+        {
+          "round": 0,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.6,
+          "verify_ms": 184.14
+        },
+        {
+          "round": 1,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.36,
+          "verify_ms": 134.6
+        },
+        {
+          "round": 2,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.78,
+          "verify_ms": 139.82
+        },
+        {
+          "round": 3,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.33,
+          "verify_ms": 134.94
+        },
+        {
+          "round": 4,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.69,
+          "verify_ms": 139.86
+        },
+        {
+          "round": 5,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.82,
+          "verify_ms": 139.92
+        },
+        {
+          "round": 6,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.52,
+          "verify_ms": 139.18
+        },
+        {
+          "round": 7,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.96,
+          "verify_ms": 139.84
+        },
+        {
+          "round": 8,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.82,
+          "verify_ms": 138.58
+        },
+        {
+          "round": 9,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.08,
+          "verify_ms": 140.53
+        },
+        {
+          "round": 10,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.46,
+          "verify_ms": 139.55
+        },
+        {
+          "round": 11,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.39,
+          "verify_ms": 138.64
+        },
+        {
+          "round": 12,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.83,
+          "verify_ms": 137.62
+        },
+        {
+          "round": 13,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.51,
+          "verify_ms": 139.24
+        },
+        {
+          "round": 14,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.49,
+          "verify_ms": 134.72
+        },
+        {
+          "round": 15,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.34,
+          "verify_ms": 135.18
+        },
+        {
+          "round": 16,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.37,
+          "verify_ms": 134.95
+        },
+        {
+          "round": 17,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.47,
+          "verify_ms": 134.66
+        },
+        {
+          "round": 18,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.49,
+          "verify_ms": 134.44
+        },
+        {
+          "round": 19,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.47,
+          "verify_ms": 134.73
+        },
+        {
+          "round": 20,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.29,
+          "verify_ms": 134.64
+        },
+        {
+          "round": 21,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.43,
+          "verify_ms": 134.73
+        },
+        {
+          "round": 22,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.17,
+          "verify_ms": 134.37
+        },
+        {
+          "round": 23,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.04,
+          "verify_ms": 139.84
+        },
+        {
+          "round": 24,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.48,
+          "verify_ms": 135.54
+        },
+        {
+          "round": 25,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.31,
+          "verify_ms": 134.74
+        },
+        {
+          "round": 26,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.56,
+          "verify_ms": 134.75
+        },
+        {
+          "round": 27,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.73,
+          "verify_ms": 141.61
+        },
+        {
+          "round": 28,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.96,
+          "verify_ms": 140.81
+        },
+        {
+          "round": 29,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.78,
+          "verify_ms": 140.7
+        },
+        {
+          "round": 30,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.34,
+          "verify_ms": 138.07
+        },
+        {
+          "round": 31,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.41,
+          "verify_ms": 137.53
+        },
+        {
+          "round": 32,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.15,
+          "verify_ms": 135.72
+        },
+        {
+          "round": 33,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.5,
+          "verify_ms": 139.97
+        },
+        {
+          "round": 34,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.57,
+          "verify_ms": 139.21
+        },
+        {
+          "round": 35,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.47,
+          "verify_ms": 134.86
+        },
+        {
+          "round": 36,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.16,
+          "verify_ms": 136.33
+        },
+        {
+          "round": 37,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 38.11,
+          "verify_ms": 139.57
+        },
+        {
+          "round": 38,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.63,
+          "verify_ms": 134.91
+        },
+        {
+          "round": 39,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.15,
+          "verify_ms": 140.35
+        },
+        {
+          "round": 40,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.51,
+          "verify_ms": 136.76
+        },
+        {
+          "round": 41,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.75,
+          "verify_ms": 140.13
+        },
+        {
+          "round": 42,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.94,
+          "verify_ms": 139.47
+        },
+        {
+          "round": 43,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.44,
+          "verify_ms": 138.72
+        },
+        {
+          "round": 44,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.09,
+          "verify_ms": 139.87
+        },
+        {
+          "round": 45,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.2,
+          "verify_ms": 135.3
+        },
+        {
+          "round": 46,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.37,
+          "verify_ms": 138.18
+        },
+        {
+          "round": 47,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.04,
+          "verify_ms": 139.19
+        },
+        {
+          "round": 48,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.83,
+          "verify_ms": 139.96
+        },
+        {
+          "round": 49,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.75,
+          "verify_ms": 135.33
+        },
+        {
+          "round": 50,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.51,
+          "verify_ms": 137.95
+        },
+        {
+          "round": 51,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.93,
+          "verify_ms": 135.79
+        },
+        {
+          "round": 52,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.54,
+          "verify_ms": 135.08
+        },
+        {
+          "round": 53,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.32,
+          "verify_ms": 138.32
+        },
+        {
+          "round": 54,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.53,
+          "verify_ms": 135.46
+        },
+        {
+          "round": 55,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.05,
+          "verify_ms": 139.75
+        },
+        {
+          "round": 56,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.85,
+          "verify_ms": 139.45
+        },
+        {
+          "round": 57,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.49,
+          "verify_ms": 139.77
+        },
+        {
+          "round": 58,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.38,
+          "verify_ms": 135.19
+        },
+        {
+          "round": 59,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.47,
+          "verify_ms": 135.33
+        },
+        {
+          "round": 60,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.39,
+          "verify_ms": 136.04
+        },
+        {
+          "round": 61,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.4,
+          "verify_ms": 135.78
+        },
+        {
+          "round": 62,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 135.05
+        },
+        {
+          "round": 63,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.36,
+          "verify_ms": 138.43
+        },
+        {
+          "round": 64,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.52,
+          "verify_ms": 135.43
+        },
+        {
+          "round": 65,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 139.38
+        },
+        {
+          "round": 66,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.59,
+          "verify_ms": 138.26
+        },
+        {
+          "round": 67,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.6,
+          "verify_ms": 135.19
+        },
+        {
+          "round": 68,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.37,
+          "verify_ms": 139.32
+        },
+        {
+          "round": 69,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.46,
+          "verify_ms": 138.47
+        },
+        {
+          "round": 70,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.45,
+          "verify_ms": 137.01
+        },
+        {
+          "round": 71,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.57,
+          "verify_ms": 135.7
+        },
+        {
+          "round": 72,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.49,
+          "verify_ms": 136.25
+        },
+        {
+          "round": 73,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.35,
+          "verify_ms": 135.45
+        },
+        {
+          "round": 74,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.41,
+          "verify_ms": 135.45
+        },
+        {
+          "round": 75,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.39,
+          "verify_ms": 135.48
+        },
+        {
+          "round": 76,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.42,
+          "verify_ms": 137.28
+        },
+        {
+          "round": 77,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.43,
+          "verify_ms": 138.59
+        }
+      ]
+    },
+    {
+      "prompt_index": 2,
+      "total_tokens": 128,
+      "rounds": 78,
+      "wall_clock_ms": 13687.07,
+      "ttft_ms": 214.61,
+      "tps": 9.35,
+      "acceptance_rate": 0.6538,
+      "acceptance_length": 0.65,
+      "draft_overhead": 0.2107,
+      "peak_vram_gb": 9.41,
+      "round_details": [
+        {
+          "round": 0,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.69,
+          "verify_ms": 175.64
+        },
+        {
+          "round": 1,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.13,
+          "verify_ms": 134.57
+        },
+        {
+          "round": 2,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.08,
+          "verify_ms": 139.64
+        },
+        {
+          "round": 3,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.54,
+          "verify_ms": 140.03
+        },
+        {
+          "round": 4,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.51,
+          "verify_ms": 134.33
+        },
+        {
+          "round": 5,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.9,
+          "verify_ms": 139.32
+        },
+        {
+          "round": 6,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.94,
+          "verify_ms": 140.01
+        },
+        {
+          "round": 7,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.6,
+          "verify_ms": 140.65
+        },
+        {
+          "round": 8,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.55,
+          "verify_ms": 138.85
+        },
+        {
+          "round": 9,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.38,
+          "verify_ms": 137.0
+        },
+        {
+          "round": 10,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.21,
+          "verify_ms": 136.84
+        },
+        {
+          "round": 11,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.6,
+          "verify_ms": 139.79
+        },
+        {
+          "round": 12,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.62,
+          "verify_ms": 138.67
+        },
+        {
+          "round": 13,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.51,
+          "verify_ms": 134.52
+        },
+        {
+          "round": 14,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.82,
+          "verify_ms": 138.85
+        },
+        {
+          "round": 15,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.54,
+          "verify_ms": 139.33
+        },
+        {
+          "round": 16,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.83,
+          "verify_ms": 138.36
+        },
+        {
+          "round": 17,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.44,
+          "verify_ms": 134.56
+        },
+        {
+          "round": 18,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.95,
+          "verify_ms": 139.67
+        },
+        {
+          "round": 19,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.74,
+          "verify_ms": 140.2
+        },
+        {
+          "round": 20,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.31,
+          "verify_ms": 138.01
+        },
+        {
+          "round": 21,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.51,
+          "verify_ms": 139.72
+        },
+        {
+          "round": 22,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.48,
+          "verify_ms": 140.19
+        },
+        {
+          "round": 23,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.42,
+          "verify_ms": 139.8
+        },
+        {
+          "round": 24,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.32,
+          "verify_ms": 134.88
+        },
+        {
+          "round": 25,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.29,
+          "verify_ms": 137.2
+        },
+        {
+          "round": 26,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.42,
+          "verify_ms": 136.22
+        },
+        {
+          "round": 27,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.94,
+          "verify_ms": 140.23
+        },
+        {
+          "round": 28,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.56,
+          "verify_ms": 137.47
+        },
+        {
+          "round": 29,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.37,
+          "verify_ms": 134.6
+        },
+        {
+          "round": 30,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.27,
+          "verify_ms": 135.02
+        },
+        {
+          "round": 31,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.28,
+          "verify_ms": 134.96
+        },
+        {
+          "round": 32,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.3,
+          "verify_ms": 137.32
+        },
+        {
+          "round": 33,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.96,
+          "verify_ms": 140.73
+        },
+        {
+          "round": 34,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.12,
+          "verify_ms": 140.29
+        },
+        {
+          "round": 35,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.33,
+          "verify_ms": 138.95
+        },
+        {
+          "round": 36,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.34,
+          "verify_ms": 136.24
+        },
+        {
+          "round": 37,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.87,
+          "verify_ms": 135.2
+        },
+        {
+          "round": 38,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.03,
+          "verify_ms": 134.94
+        },
+        {
+          "round": 39,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.27,
+          "verify_ms": 135.27
+        },
+        {
+          "round": 40,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.42,
+          "verify_ms": 138.73
+        },
+        {
+          "round": 41,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.16,
+          "verify_ms": 134.84
+        },
+        {
+          "round": 42,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.49,
+          "verify_ms": 138.28
+        },
+        {
+          "round": 43,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.41,
+          "verify_ms": 134.99
+        },
+        {
+          "round": 44,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.95,
+          "verify_ms": 137.2
+        },
+        {
+          "round": 45,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.73,
+          "verify_ms": 140.34
+        },
+        {
+          "round": 46,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.5,
+          "verify_ms": 135.7
+        },
+        {
+          "round": 47,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.42,
+          "verify_ms": 135.17
+        },
+        {
+          "round": 48,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.4,
+          "verify_ms": 137.13
+        },
+        {
+          "round": 49,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.03,
+          "verify_ms": 136.35
+        },
+        {
+          "round": 50,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.56,
+          "verify_ms": 135.19
+        },
+        {
+          "round": 51,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.59,
+          "verify_ms": 138.56
+        },
+        {
+          "round": 52,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.92,
+          "verify_ms": 139.95
+        },
+        {
+          "round": 53,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.49,
+          "verify_ms": 135.18
+        },
+        {
+          "round": 54,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.45,
+          "verify_ms": 134.88
+        },
+        {
+          "round": 55,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.55,
+          "verify_ms": 138.75
+        },
+        {
+          "round": 56,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 38.07,
+          "verify_ms": 138.66
+        },
+        {
+          "round": 57,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.05,
+          "verify_ms": 140.32
+        },
+        {
+          "round": 58,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.54,
+          "verify_ms": 139.13
+        },
+        {
+          "round": 59,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.5,
+          "verify_ms": 134.83
+        },
+        {
+          "round": 60,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.27,
+          "verify_ms": 139.19
+        },
+        {
+          "round": 61,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 38.02,
+          "verify_ms": 140.95
+        },
+        {
+          "round": 62,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 38.09,
+          "verify_ms": 140.46
+        },
+        {
+          "round": 63,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.38,
+          "verify_ms": 139.01
+        },
+        {
+          "round": 64,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.38,
+          "verify_ms": 134.91
+        },
+        {
+          "round": 65,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.46,
+          "verify_ms": 135.24
+        },
+        {
+          "round": 66,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.41,
+          "verify_ms": 135.66
+        },
+        {
+          "round": 67,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.41,
+          "verify_ms": 135.57
+        },
+        {
+          "round": 68,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.87,
+          "verify_ms": 139.46
+        },
+        {
+          "round": 69,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.87,
+          "verify_ms": 135.18
+        },
+        {
+          "round": 70,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 36.44,
+          "verify_ms": 135.9
+        },
+        {
+          "round": 71,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.09,
+          "verify_ms": 137.85
+        },
+        {
+          "round": 72,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.95,
+          "verify_ms": 139.54
+        },
+        {
+          "round": 73,
+          "proposed": 1,
+          "accepted": 0,
+          "bonus": false,
+          "produced": 1,
+          "draft_ms": 37.24,
+          "verify_ms": 140.66
+        },
+        {
+          "round": 74,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.53,
+          "verify_ms": 138.57
+        },
+        {
+          "round": 75,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 36.46,
+          "verify_ms": 138.11
+        },
+        {
+          "round": 76,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 37.88,
+          "verify_ms": 139.68
+        },
+        {
+          "round": 77,
+          "proposed": 1,
+          "accepted": 1,
+          "bonus": true,
+          "produced": 1,
+          "draft_ms": 37.76,
+          "verify_ms": 139.72
+        }
+      ]
+    }
+  ]
+}
