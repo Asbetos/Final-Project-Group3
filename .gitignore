@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Claude
+.claude/
+
+# Results and logs (regenerable from experiments)
+results/
+*.txt
+Code/*.log
+Code/checkpoints/
+Code/archive/qwen_legacy/checkpoints/
+Code/archive/qwen_legacy/logs/
+Code/archive/qwen_legacy/results/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+# Files
+Code/archive/
+Code/documentation/
+Code/figures/previous_figures/
+Code/app.py
+Code/eagle3_train.py
+Code/eagle3.py
+Code/test.py
+Code/test_correctness.py
+
+#Folders
+docs/
+figures/
+Final-Group-Presentation/
+Final-Group-Project-Report/
+Group-Proposal/
+jeongmin-an-individual-project/
+manoj-kodihalli-individual-project/
+offload/
+venkatesh-nagarjuna-individual-project/
+diag_config.py
+sweep_standard.log
