@@ -190,7 +190,17 @@ EAGLE3_PAIR_H = Eagle3PairConfig(
     target_vram_estimate_gb=15.5,
 )
 
-ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_H]
+EAGLE3_PAIR_I = Eagle3PairConfig(
+    pair_id="I",
+    target_model_id="google/gemma-3-12b-it",
+    target_quantize_4bit=True,
+    checkpoint_path=os.path.join(_CODE_DIR, "checkpoints", "eagle3", "gemma3_12b", "eagle3_gemma3_12b_final.pt"),
+    tree_budget=80,
+    max_depth=6,
+    top_k=12,
+    target_vram_estimate_gb=6.6,
+)
+ALL_EAGLE3_PAIRS = [EAGLE3_PAIR_H, EAGLE3_PAIR_I]
 EAGLE3_PAIR_MAP = {p.pair_id: p for p in ALL_EAGLE3_PAIRS}
 
 ALL_TREE_BUDGETS = [20, 60]

@@ -94,10 +94,10 @@ class Eagle3Config:
     head_dim: int = 128
     intermediate_size: int = 12288  # fallback only; overridden by from_model()
     feature_layers: Tuple[int, ...] = (4, 16, 31)  # low / mid / high
-    tree_budget: int = 60
+    tree_budget: int = 80
     max_depth: int = 6
-    top_k: int = 10
-    vocab_size: int = 151936  # fallback only; overridden by from_model()
+    top_k: int = 12
+    vocab_size: int = 256000  # fallback only; overridden by from_model()
     rms_norm_eps: float = 1e-6
     rope_theta: float = 1000000.0
 
@@ -1091,7 +1091,7 @@ def eagle3_decode(
             continue
 
         # Pick the path with the best cumulative log-probability
-        best_path = max(paths, key=lambda p: tree_nodes[p[-1]].cum_logprob)
+        best_path = max(paths, key=lambda p: tree_nodes[p[-1]].cum_logprob / max(tree_nodes[p[-1]].depth, 1))
 
         # Build the draft token sequence for this path: [root, node0, node1, ...]
         path_token_ids = [root_token_id] + [tree_nodes[ni].token_id for ni in best_path]

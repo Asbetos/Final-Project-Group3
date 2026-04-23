@@ -59,7 +59,7 @@ def load_model(
 
     load_kwargs = dict(
         trust_remote_code=True,
-        dtype=torch.bfloat16,
+        torch_dtype=torch.bfloat16,
         attn_implementation="sdpa",
     )
 

@@ -34,3 +34,8 @@ Code/archive/qwen_legacy/results/
 # OS
 .DS_Store
 Thumbs.db
+*.pt
+*.pth
+*.bin
+checkpoints/
+__pycache__/

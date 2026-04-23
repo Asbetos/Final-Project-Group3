@@ -104,8 +104,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--eagle3-pairs",
         nargs="+",
-        default=["H"],
-        choices=["H"],
+        default=["H", "I"],
+        choices=["H", "I"],
         help="EAGLE-3 pair IDs to run (default: H; H=Gemma4-31B EAGLE-3)",
     )
     parser.add_argument(
