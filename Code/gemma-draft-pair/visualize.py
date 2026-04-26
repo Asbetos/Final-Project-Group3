@@ -19,8 +19,8 @@ def load_master_csv(paths=None) -> pd.DataFrame:
     """Load one or more aggregated results CSVs into a single DataFrame."""
     if paths is None:
         paths = [
-            "Code/gemma_runs/outputs/F_final/summary.csv",
-            "Code/gemma_runs/outputs/G_final/summary.csv",
+            "gemma_runs/outputs/F_final/summary.csv",
+            "gemma_runs/outputs/G_final/summary.csv",
         ]
 
     dfs = [pd.read_csv(p) for p in paths]
@@ -378,7 +378,7 @@ def plot_vram_usage(df: pd.DataFrame, output_dir: str = "figures") -> None:
 
 def generate_all_plots(
     csv_paths = None,
-    output_dir: str = "Code/figures/FG_final",
+    output_dir: str = "figures/FG_final",
 ) -> None:
     """Run all plot functions from the master CSV."""
     os.makedirs(output_dir, exist_ok=True)
@@ -417,8 +417,8 @@ def generate_all_plots(
 if __name__ == "__main__":
     generate_all_plots(
         csv_paths=[
-            "Code/gemma_runs/outputs/F_final/summary.csv",
-            "Code/gemma_runs/outputs/G_final/summary.csv",
+            "gemma_runs/outputs/F_final/summary.csv",
+            "gemma_runs/outputs/G_final/summary.csv",
         ],
-        output_dir="Code/figures/FG_final",
+        output_dir="figures/FG_final",
     )
