@@ -39,3 +39,4 @@ Thumbs.db
 *.bin
 checkpoints/
 __pycache__/
+*.pt
