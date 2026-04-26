@@ -72,8 +72,21 @@ def load_model(
         )
         load_kwargs["quantization_config"] = bnb_config
         load_kwargs["device_map"] = {"": device}
+        # Use meta-device init + streamed weight load. Avoids a full CPU copy
+        # of the model during from_pretrained. Required for loading 31B-scale
+        # models on systems with limited RAM / no swap.
+        load_kwargs["low_cpu_mem_usage"] = True
 
     logger.info("Loading model %s (4-bit=%s) ...", model_id, quantize_4bit)
+
+    # Replace transformers' safetensors loader with a non-mmap variant.
+    # Required on memory-constrained systems (e.g. 30GB RAM + no swap)
+    # where `mmap()` on the 46GB shard of Gemma 4 31B is rejected by the
+    # kernel's heuristic overcommit even though mmap pages are backed by
+    # disk, not RAM. Reads via os.pread() bypass that limit.
+    from safetensors_nommap import patch_transformers_safetensors_loader
+    patch_transformers_safetensors_loader()
+
     model_config = AutoConfig.from_pretrained(model_id, trust_remote_code=True)
     architectures = getattr(model_config, "architectures", []) or []
     is_conditional_generation = any(

@@ -87,7 +87,7 @@ ALL_PAIRS = [PAIR_F, PAIR_G]
 PAIR_MAP = {p.pair_id: p for p in ALL_PAIRS}
 
 ALL_GAMMAS = [1, 5, 10]
-ALL_TEMPERATURES = [0.0]  # greedy-only evaluation
+ALL_TEMPERATURES = [0.0, 0.6, 1.0]  # greedy + moderate + high-entropy
 ALL_TASKS = ["humaneval", "triviaqa", "cnn_dailymail", "writingprompts"]
 
 

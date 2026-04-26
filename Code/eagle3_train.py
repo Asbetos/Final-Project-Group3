@@ -391,11 +391,25 @@ def train_eagle3_head(
     # but requires_grad_(False) also prevents VRAM being wasted on grad buffers.
     target_model.requires_grad_(False)
 
-    optimizer = torch.optim.AdamW(
-        draft_head.trainable_parameters(),
-        lr=config.learning_rate,
-        weight_decay=config.weight_decay,
-    )
+    # Prefer 8-bit AdamW (bitsandbytes) when the target is 4-bit quantized:
+    # fp32 Adam state on ~623M draft-head params is ~5 GB and pushes A10G
+    # (22 GB total) over its limit with a 15.5 GB quantized target. 8-bit
+    # state cuts that to ~1.25 GB. Fall back to fp32 AdamW if bnb is missing.
+    try:
+        import bitsandbytes as _bnb
+        optimizer = _bnb.optim.AdamW8bit(
+            draft_head.trainable_parameters(),
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay,
+        )
+        logger.info("Using 8-bit AdamW (bitsandbytes) for draft head")
+    except ImportError:
+        optimizer = torch.optim.AdamW(
+            draft_head.trainable_parameters(),
+            lr=config.learning_rate,
+            weight_decay=config.weight_decay,
+        )
+        logger.info("Using fp32 AdamW for draft head (bitsandbytes unavailable)")
 
     # Linear warmup + cosine decay
     batches_per_epoch = math.ceil(len(train_dataset) / config.batch_size)
@@ -732,6 +746,17 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--num-samples", type=int, default=5000)
     parser.add_argument("--max-seq-len", type=int, default=512)
+    parser.add_argument(
+        "--multi-step-k",
+        type=int,
+        default=5,
+        help=(
+            "Number of autoregressive multi-step loss iterations. Each step "
+            "holds its own forward graph in VRAM until the outer backward call, "
+            "so large K × (vocab=262144) blows up memory on A10G. Reduce to 2 "
+            "or 3 for memory-constrained targets like Gemma 4 31B."
+        ),
+    )
     parser.add_argument("--dataset-name", type=str, default="tatsu-lab/alpaca")
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
@@ -794,6 +819,7 @@ def main():
         learning_rate=args.lr,
         num_samples=args.num_samples,
         max_seq_len=args.max_seq_len,
+        multi_step_k=args.multi_step_k,
         dataset_name=args.dataset_name,
         num_workers=args.num_workers,
         seed=args.seed,

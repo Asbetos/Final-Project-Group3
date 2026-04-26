@@ -10,6 +10,34 @@ import torch.nn.functional as F
 from typing import List, Optional, Tuple
 
 
+def _safe_multinomial(
+    probs: torch.Tensor,
+    num_samples: int,
+    generator: Optional[torch.Generator],
+) -> torch.Tensor:
+    """torch.multinomial that handles generator/probs device mismatch.
+
+    PyTorch requires generator.device == probs.device. The runner may pass
+    either a CPU or CUDA generator, so move probs to match.
+    """
+    if generator is not None and probs.device != generator.device:
+        probs = probs.to(generator.device)
+    return torch.multinomial(probs, num_samples=num_samples, generator=generator)
+
+
+def _safe_rand(
+    *size: int,
+    generator: Optional[torch.Generator],
+) -> torch.Tensor:
+    """torch.rand that picks the device matching the generator.
+
+    Avoids `Expected 'cpu' device type for generator but found 'cuda'` when
+    the caller's generator lives on a different default device than torch.rand.
+    """
+    device = generator.device if generator is not None else None
+    return torch.rand(*size, generator=generator, device=device)
+
+
 def sample_from_logits(
     logits: torch.Tensor,
     temperature: float,
@@ -36,7 +64,7 @@ def sample_from_logits(
 
     scaled_logits = logits / temperature
     probs = F.softmax(scaled_logits, dim=-1)
-    token_id = int(torch.multinomial(probs, num_samples=1, generator=generator).item())
+    token_id = int(_safe_multinomial(probs, num_samples=1, generator=generator).item())
     return token_id, probs
 
 
@@ -74,7 +102,7 @@ def rejection_sample_token(
         # Draft has no probability distribution (e.g. n-gram or future zero-cost draft).
         # Treat as q(x)=1 for the proposed token: accept with probability p(x).
         p = float(target_probs[draft_token].item())
-        u = float(torch.rand(1, generator=generator).item())
+        u = float(_safe_rand(1, generator=generator).item())
         if u < p:
             return True, draft_token
         return False, int(sample_residual_distribution(target_probs, None, generator))
@@ -88,7 +116,7 @@ def rejection_sample_token(
         return False, int(sample_residual_distribution(target_probs, draft_probs, generator))
 
     acceptance_prob = min(1.0, p / q)
-    u = float(torch.rand(1, generator=generator).item())
+    u = float(_safe_rand(1, generator=generator).item())
 
     if u < acceptance_prob:
         return True, draft_token
@@ -163,9 +191,12 @@ def batch_rejection_sample(
         # token (q→0), the residual distribution handles resampling correctly.
         accept_probs = torch.where(q_vals < 1e-9, torch.zeros_like(accept_probs), accept_probs)
 
-    # Generate all random numbers in one call (CPU generator avoids GPU kernel launch overhead)
-    u = torch.rand(gamma, generator=generator)  # (gamma,) on CPU
-    accepted_mask = u < accept_probs.cpu()      # (gamma,) bool
+    # Generate all random numbers in one call. Use the generator's device so
+    # this works whether the caller passes a CPU or CUDA generator.
+    u = _safe_rand(gamma, generator=generator)
+    if u.device != accept_probs.device:
+        u = u.to(accept_probs.device)
+    accepted_mask = u < accept_probs
 
     if accepted_mask.all():
         num_accepted = gamma
@@ -200,17 +231,17 @@ def sample_residual_distribution(
     If draft_probs is None (no distribution available), samples directly from target.
     """
     if draft_probs is None:
-        return int(torch.multinomial(target_probs, num_samples=1, generator=generator).item())
+        return int(_safe_multinomial(target_probs, num_samples=1, generator=generator).item())
 
     residual = torch.clamp(target_probs - draft_probs, min=0.0)
     total = residual.sum()
 
     if total <= 0.0:
         # Degenerate case (q >= p everywhere): fall back to target distribution
-        return int(torch.multinomial(target_probs, num_samples=1, generator=generator).item())
+        return int(_safe_multinomial(target_probs, num_samples=1, generator=generator).item())
 
     residual = residual / total
-    return int(torch.multinomial(residual, num_samples=1, generator=generator).item())
+    return int(_safe_multinomial(residual, num_samples=1, generator=generator).item())
 
 
 def sample_bonus_token(
@@ -236,4 +267,4 @@ def sample_bonus_token(
             return int(target_logits.argmax(dim=-1).item())
         return int(target_probs.argmax(dim=-1).item())
 
-    return int(torch.multinomial(target_probs, num_samples=1, generator=generator).item())
+    return int(_safe_multinomial(target_probs, num_samples=1, generator=generator).item())
