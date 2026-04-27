@@ -58,3 +58,4 @@ offload/
 venkatesh-nagarjuna-individual-project/
 diag_config.py
 sweep_standard.log
+Code/eagle3-gemma4-31B/checkpoints/eagle3/gemma3_12b/*.pt

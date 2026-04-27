@@ -57,19 +57,19 @@ class TrainingConfig:
     grad_accum_steps: int = 8
     learning_rate: float = 3e-4
     weight_decay: float = 0.01
-    epochs: int = 3
-    num_samples: int = 5000
+    epochs: int = 10
+    num_samples: int = -1
     max_seq_len: int = 512
     multi_step_k: int = 5  # number of autoregressive draft steps for loss
     step_decay: float = 0.8  # loss weight decay per step
     warmup_steps: int = 100
     save_every: int = 500
     log_every: int = 10
-    checkpoint_dir: str = "checkpoints/eagle3/gemma4_31b"
-    final_checkpoint_name: str = "eagle3_gemma4_31b_final.pt"
-    target_model_id: str = "google/gemma-4-31B"
+    checkpoint_dir: str = "checkpoints/eagle3/gemma3_12b"
+    final_checkpoint_name: str = "eagle3_gemma3_12b_final.pt"
+    target_model_id: str = "google/gemma-3-12b-it"
     target_quantize_4bit: bool = True
-    dataset_name: str = "tatsu-lab/alpaca"
+    dataset_name: str = "vicgalle/alpaca-gpt4"
     num_workers: int = 0
     seed: int = 42
     resume_checkpoint: Optional[str] = None
@@ -87,14 +87,16 @@ class AlpacaDataset(Dataset):
     def __init__(
         self,
         tokenizer: AutoTokenizer,
-        dataset_name: str = "tatsu-lab/alpaca",
-        num_samples: int = 5000,
+        dataset_name: str = "vicgalle/alpaca-gpt4",
+        num_samples: int = -1,
         max_seq_len: int = 512,
         seed: int = 42,
     ):
         logger.info("Loading dataset %s ...", dataset_name)
         ds = load_dataset(dataset_name)["train"]
-        ds = ds.shuffle(seed=seed).select(range(min(num_samples, len(ds))))
+        ds = ds.shuffle(seed=seed)
+        if num_samples > 0:
+            ds = ds.select(range(min(num_samples, len(ds))))
 
         self.examples = []
         for row in ds:
@@ -724,8 +726,8 @@ def main():
     parser.add_argument(
         "--target-model",
         type=str,
-        default="google/gemma-4-31B",
-        help="Target model ID (default: google/gemma-4-31B)",
+        default="google/gemma-3-12b-it",
+        help="Target model ID (default: google/gemma-3-12b-it)",
     )
     parser.add_argument(
         "--target-4bit",
@@ -740,11 +742,11 @@ def main():
         action="store_false",
         help="Disable 4-bit target loading.",
     )
-    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--grad-accum", type=int, default=8)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--num-samples", type=int, default=5000)
+    parser.add_argument("--num-samples", type=int, default=-1)
     parser.add_argument("--max-seq-len", type=int, default=512)
     parser.add_argument(
         "--multi-step-k",
@@ -757,7 +759,7 @@ def main():
             "or 3 for memory-constrained targets like Gemma 4 31B."
         ),
     )
-    parser.add_argument("--dataset-name", type=str, default="tatsu-lab/alpaca")
+    parser.add_argument("--dataset-name", type=str, default="vicgalle/alpaca-gpt4")
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
@@ -768,7 +770,7 @@ def main():
     parser.add_argument(
         "--checkpoint-dir",
         type=str,
-        default="checkpoints/eagle3/gemma4_31b",
+        default="checkpoints/eagle3/gemma3_12b",
     )
     parser.add_argument(
         "--resume",

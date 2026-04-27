@@ -104,9 +104,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--eagle3-pairs",
         nargs="+",
-        default=["H"],
-        choices=["H"],
-        help="EAGLE-3 pair IDs to run (default: H; H=Gemma4-31B EAGLE-3)",
+        default=["I"],
+        choices=["H", "I"],
+        help="EAGLE-3 pair IDs to run (default: I; H=Gemma4-31B EAGLE-3, I=Gemma3-12B EAGLE-3)",
     )
     parser.add_argument(
         "--tree-budgets",
