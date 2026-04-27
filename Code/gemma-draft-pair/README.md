@@ -1,66 +1,81 @@
-# Gemma Runs Notes
+# Gemma Draft Pair Module
 
-## Current status
-This folder tracks experimental progress on active Gemma speculative decoding 
+This module benchmarks standard speculative decoding for the active project pair:
 
-### Active Pairs
-#### Pair F
-- Target: `google/gemma-3-12b-it`
-- Draft: `google/gemma-3-1b-it`
+1. Pair `F`
+2. Target: `google/gemma-3-12b-it`
+3. Draft: `google/gemma-3-1b-it`
 
-#### Pair G
-- Target: `google/gemma-4-31B`
-- Draft: `google/gemma-3-1b-it`
+The main entrypoint is `sweep.py`.
 
-## What has been completed
-- Environment setup on AWS `g5.2xlarge` (A10G, 24GB VRAM)
-- Hugging Face access/authentication for Gemma models
-- Standard speculative benchmark runs completed for active Gemma pairs `F` and `G`
-- Sweeps completed across:
-  - tasks: `humaneval`, `triviaqa`, `cnn_dailymail`, `writingprompts`
-  - gammas: `1, 3, 5, 7, 10`
-  - temperatures: `0.0, 0.6, 1.0`
-- Final summaries generated under:
-  - `Code/gemma_runs/outputs/F_final/summary.csv`
-  - `Code/gemma_runs/outputs/G_final/summary.csv`
-- F vs G comparison visualizations generated under:
-  - `Code/figures/FG_final/`
+## Setup
 
-## Why gamma and temperature were swept
-- `gamma` controls speculation length, or how many draft tokens are proposed before target verification.
-- Increasing `gamma` tests whether longer draft proposals improve throughput enough to offset extra verification overhead.
-- `temperature` controls sampling randomness.
-- Sweeping `temperature` tests whether speculative decoding remains effective beyond greedy decoding, especially under more stochastic generation settings.
+From the repository root:
 
-## Main observations so far
-- Pair `F` is generally more stable than Pair `G` across tasks and temperatures.
-- Pair `F` achieves higher speedup across all evaluated tasks in the current F vs G comparison plots.
-- Pair `G` is more sensitive to higher temperatures, especially at `T=1.0`, where acceptance and speedup drop more noticeably.
-- Pair `G` uses substantially more VRAM than Pair `F`, although both still fit within the 24GB A10G memory limit.
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r Code/gemma-draft-pair/requirements.txt
+```
 
-## Code changes
-- `Code/models.py`
-  - Added a Gemma-4 tokenizer fallback for compatibility.
-  - Switched model loading to an auto/offload-based flow so large Gemma models could be loaded more reliably in our AWS GPU environment, while keeping the existing 4-bit quantization path.
-- `Code/sampling.py`
-  - Updated stochastic batch rejection sampling to generate random values on the same device as the target logits, avoiding device mismatch during non-zero temperature runs.
-  - Added shared-vocabulary alignment for target and draft distributions to handle vocab-size mismatch during speculative comparison and residual sampling.
-- `Code/sweep.py`
-  - Updated output path handling to organize runs under `Code/gemma_runs/outputs/`.
-- `Code/visualize.py`
-  - Updated visualization flow to compare active Gemma pairs `F` and `G` from their final summary files.
+Then switch into this module:
 
-## Files included here
-- `Code/gemma_runs/outputs/F_final/`
-- `Code/gemma_runs/outputs/G_final/`
-- `Code/figures/FG_final/`
-- supporting code changes in:
-  - `models.py`
-  - `sampling.py`
-  - `sweep.py`
-  - `visualize.py`
+```bash
+cd Code/gemma-draft-pair
+```
 
-## Next step
-- Integrate Pair `H` (EAGLE-3)
-- Update comparison plots to include `H`
-- Use the final figures in the project report and presentation
+## Quick Validation
+
+```bash
+python3 test_correctness.py --level 1
+python3 test_correctness.py --level 3 --pair F
+python3 sweep.py --dry-run --pairs F
+```
+
+## Full Evaluation Run
+
+```bash
+python3 sweep.py --pairs F --output-dir gemma_runs/outputs/F_rerun
+```
+
+## Full Project Grid For Pair F
+
+The saved final pair `F` results were produced across:
+
+1. `gamma`: `1, 3, 5, 7, 10`
+2. `temperature`: `0.0, 0.6, 1.0`
+3. `task`: `humaneval`, `triviaqa`, `cnn_dailymail`, `writingprompts`
+4. `num_prompts`: `50`
+5. `max_new_tokens`: `128`
+
+Equivalent command:
+
+```bash
+python3 sweep.py \
+  --pairs F \
+  --gammas 1 3 5 7 10 \
+  --temps 0.0 0.6 1.0 \
+  --tasks humaneval triviaqa cnn_dailymail writingprompts \
+  --num-prompts 50 \
+  --max-tokens 128 \
+  --output-dir gemma_runs/outputs/F_full
+```
+
+## Outputs
+
+```text
+gemma_runs/outputs/<run_name>/
+  baseline/
+  speculative/
+  summary.csv
+```
+
+Saved project artifacts:
+
+1. `gemma_runs/outputs/F_final/summary.csv`
+2. `figures/FG_final/`
+
+## Notes
+
+1. Some historical comparison artifacts for pair `G` are still present in this folder, but pair `F` is the active project scope.
+2. Use the repository root `README.md` for the full two-module project overview.

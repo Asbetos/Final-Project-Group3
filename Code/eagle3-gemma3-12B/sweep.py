@@ -132,21 +132,30 @@ def main():
         logger.info("GPU: %s (compute capability %d.%d)", gpu_name, *gpu_cap)
 
     args = parse_args()
-    pairs = [PAIR_MAP[pid] for pid in args.pairs]
+    standard_pairs = [] if getattr(args, 'eagle3_only', False) else [PAIR_MAP[pid] for pid in args.pairs]
+    eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs] if args.eagle3 else []
 
-    total_baseline = len(args.tasks) * len(args.temps) * len(pairs)
-    total_spec = len(pairs) * len(args.gammas) * len(args.temps) * len(args.tasks)
-    total = total_baseline + total_spec
+    total_standard_baseline = len(args.tasks) * len(args.temps) * len(standard_pairs)
+    total_standard_spec = (
+        len(standard_pairs) * len(args.gammas) * len(args.temps) * len(args.tasks)
+    )
+    total_eagle3_baseline = len(args.tasks) * len(args.temps) * len(eagle3_pairs)
+    total_eagle3_spec = (
+        len(eagle3_pairs) * len(args.tree_budgets) * len(args.temps) * len(args.tasks)
+    )
+    total = (
+        total_standard_baseline
+        + total_standard_spec
+        + total_eagle3_baseline
+        + total_eagle3_spec
+    )
 
     logger.info(
-        "Experiment grid: %d pairs x %d gammas x %d temps x %d tasks = "
-        "%d speculative + %d baseline = %d total configs",
-        len(pairs),
-        len(args.gammas),
-        len(args.temps),
-        len(args.tasks),
-        total_spec,
-        total_baseline,
+        "Experiment grid: standard=%d baseline + %d speculative, eagle3=%d baseline + %d configs, total=%d",
+        total_standard_baseline,
+        total_standard_spec,
+        total_eagle3_baseline,
+        total_eagle3_spec,
         total,
     )
 
@@ -154,7 +163,7 @@ def main():
         print(f"\n{'='*70}")
         print("DRY RUN — would execute the following configurations:")
         print(f"{'='*70}\n")
-        for pair in pairs:
+        for pair in standard_pairs:
             print(f"Pair {pair.pair_id}: {pair.target_model_id} + {pair.draft_model_id}")
             print(f"  4-bit target: {pair.target_quantize_4bit}")
             print(f"  VRAM estimate: {pair.total_vram_estimate_gb:.1f} GB\n")
@@ -167,7 +176,6 @@ def main():
                         print(f"  [SPEC] {task} gamma={gamma} t={temp}")
             print()
         if args.eagle3:
-            eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs]
             for pair in eagle3_pairs:
                 print(f"EAGLE-3 Pair {pair.pair_id}: {pair.target_model_id} + draft head")
                 print(f"  4-bit target: {pair.target_quantize_4bit}")
@@ -180,7 +188,7 @@ def main():
                         for task in args.tasks:
                             print(f"  [EAGLE3] {task} tree_budget={tb} t={temp}")
                 print()
-        print(f"Total: {total} standard configs, {args.num_prompts} prompts each")
+        print(f"Total: {total} configs, {args.num_prompts} prompts each")
         return
 
     # Defer heavy imports until actually needed (allows --dry-run without GPU deps)
@@ -193,7 +201,7 @@ def main():
 
     # Run standard speculative decoding pair by pair (skip if --eagle3-only)
     if not getattr(args, 'eagle3_only', False):
-        for pair in pairs:
+        for pair in standard_pairs:
             logger.info("=" * 70)
             logger.info("Starting pair %s", pair.pair_id)
             logger.info("=" * 70)
@@ -212,7 +220,6 @@ def main():
         args.eagle3 = True
 
     if args.eagle3:
-        eagle3_pairs = [EAGLE3_PAIR_MAP[pid] for pid in args.eagle3_pairs]
         for pair in eagle3_pairs:
             logger.info("=" * 70)
             logger.info("Starting EAGLE-3 pair %s", pair.pair_id)

@@ -392,7 +392,7 @@ def run_eagle3_unit_tests():
 
 
 def test_eagle3_greedy_equivalence(
-    pair_id: str = "H",
+    pair_id: str = "I",
     max_new_tokens: int = 32,
     prompt_text: str = "Write a Python function that computes the factorial of a number.",
 ):
@@ -501,7 +501,7 @@ def test_eagle3_greedy_equivalence(
 # ===================================================================
 
 
-def test_eagle3_smoke(pair_id: str = "H", max_new_tokens: int = 16):
+def test_eagle3_smoke(pair_id: str = "I", max_new_tokens: int = 16):
     """Quick EAGLE-3 smoke test: tree decode, verify no crash/NaN."""
     from config import EAGLE3_PAIR_MAP
     from models import load_eagle3_pair, unload_models
@@ -589,8 +589,8 @@ def main():
         "--pair",
         type=str,
         default="F",
-        choices=["F", "G", "H"],
-        help="Model pair for GPU tests (default: F; H is EAGLE-3 only)",
+        choices=["F", "G", "I"],
+        help="Model pair for GPU tests (default: F; I is the active EAGLE-3 pair)",
     )
     args = parser.parse_args()
 
@@ -605,10 +605,10 @@ def main():
     if args.level >= 4:
         run_eagle3_unit_tests()
     if args.level >= 5:
-        eagle3_pair = args.pair if args.pair == "H" else "H"
+        eagle3_pair = args.pair if args.pair == "I" else "I"
         test_eagle3_greedy_equivalence(pair_id=eagle3_pair)
     if args.level >= 6:
-        eagle3_pair = args.pair if args.pair == "H" else "H"
+        eagle3_pair = args.pair if args.pair == "I" else "I"
         test_eagle3_smoke(pair_id=eagle3_pair)
 
     logger.info("All tests at level %d passed!", args.level)
