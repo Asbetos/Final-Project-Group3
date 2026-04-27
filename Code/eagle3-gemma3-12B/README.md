@@ -89,6 +89,32 @@ python3 sweep.py \
   --output-dir results/eagle3_gemma3_calibration
 ```
 
+## Unified Chat Comparison App
+
+This module also contains a Streamlit app that compares:
+
+1. baseline autoregressive decoding on the left
+2. one selected acceleration method on the right
+
+The right-hand chat can switch between:
+
+1. standard speculative decoding with pair `F`
+2. EAGLE-3 decoding with pair `I`
+
+Run it with:
+
+```bash
+streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+```
+
+The app keeps models warm in memory with `st.cache_resource` and stores downloaded Hugging Face artifacts under a local `.hf-cache/` directory so they do not need to be fetched again on every restart.
+
+Deployment note:
+
+1. the app is Streamlit-compatible
+2. truly fast warm-model serving requires a persistent GPU process
+3. Vercel is better used as a thin frontend or proxy than as the actual model host for Gemma-12B inference
+
 ## Outputs
 
 ```text

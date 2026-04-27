@@ -16,6 +16,7 @@ env/
 .claude/
 .cursor/
 .archive/
+.hf-cache/
 
 # Results and logs (regenerable from experiments)
 results/
