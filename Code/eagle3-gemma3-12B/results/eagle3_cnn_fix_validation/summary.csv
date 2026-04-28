@@ -1,0 +1,3 @@
+pair_id,task,gamma,temperature,is_baseline,mean_tps,std_tps,p95_tps,mean_acceptance_rate,mean_acceptance_length,mean_ttft_ms,mean_peak_vram_gb,mean_draft_overhead,speedup,tree_budget,is_eagle3
+I,cnn_dailymail,0,0.0,True,7.47,0.26,7.7,1.0,1.0,521.72,8.53,0.0,1.0,,
+I,cnn_dailymail,0,0.0,False,4.02,1.84,5.67,0.0,0.0,525.84,9.42,0.0809,0.538,20,True

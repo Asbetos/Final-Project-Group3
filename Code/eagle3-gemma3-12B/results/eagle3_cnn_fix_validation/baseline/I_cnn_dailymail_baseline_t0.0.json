@@ -1,0 +1,78 @@
+{
+  "config": {
+    "pair_id": "I",
+    "task": "cnn_dailymail",
+    "temperature": 0.0,
+    "is_baseline": true
+  },
+  "summary": {
+    "tokens_per_second": {
+      "mean": 7.466709159193647,
+      "std": 0.261635410019152,
+      "p95": 7.702181028210884
+    },
+    "acceptance_rate": {
+      "mean": 1.0,
+      "std": 0.0,
+      "p95": 1.0
+    },
+    "acceptance_length": {
+      "mean": 1.0,
+      "std": 0.0,
+      "p95": 1.0
+    },
+    "ttft_ms": {
+      "mean": 521.7197004822083,
+      "std": 120.16348549514078,
+      "p95": 629.866837427835
+    },
+    "wall_clock_ms": {
+      "mean": 4290.958418991067,
+      "std": 150.3562870057067,
+      "p95": 4426.2790772962035
+    },
+    "draft_overhead_ratio": {
+      "mean": 0.0,
+      "std": 0.0,
+      "p95": 0.0
+    },
+    "peak_vram_gb": {
+      "mean": 8.529678344726562,
+      "std": 0.1894516944885254,
+      "p95": 8.700184869766236
+    },
+    "total_tokens": {
+      "mean": 32.0,
+      "std": 0.0,
+      "p95": 32.0
+    }
+  },
+  "per_prompt": [
+    {
+      "prompt_index": 0,
+      "total_tokens": 32,
+      "rounds": 32,
+      "wall_clock_ms": 4441.31,
+      "ttft_ms": 641.88,
+      "tps": 7.21,
+      "acceptance_rate": 1.0,
+      "acceptance_length": 1.0,
+      "draft_overhead": 0.0,
+      "peak_vram_gb": 8.72,
+      "round_details": []
+    },
+    {
+      "prompt_index": 1,
+      "total_tokens": 32,
+      "rounds": 32,
+      "wall_clock_ms": 4140.6,
+      "ttft_ms": 401.56,
+      "tps": 7.73,
+      "acceptance_rate": 1.0,
+      "acceptance_length": 1.0,
+      "draft_overhead": 0.0,
+      "peak_vram_gb": 8.34,
+      "round_details": []
+    }
+  ]
+}

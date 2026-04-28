@@ -19,7 +19,7 @@ env/
 .hf-cache/
 
 # Results and logs (regenerable from experiments)
-results/
+# results/
 *.txt
 Code/*.log
 Code/checkpoints/

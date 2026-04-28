@@ -1,0 +1,381 @@
+{
+  "config": {
+    "pair": {
+      "pair_id": "I",
+      "target_model_id": "google/gemma-3-12b-it",
+      "target_quantize_4bit": true,
+      "checkpoint_path": "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma3-12B/checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt",
+      "tree_budget": 60,
+      "max_depth": 6,
+      "top_k": 10,
+      "target_vram_estimate_gb": 6.6
+    },
+    "tree_budget": 20,
+    "temperature": 0.0,
+    "task": "cnn_dailymail",
+    "max_new_tokens": 32,
+    "num_prompts": 2,
+    "num_warmup": 3,
+    "seed": 42
+  },
+  "summary": {
+    "tokens_per_second": {
+      "mean": 4.01851902116185,
+      "std": 1.8399790828208769,
+      "p95": 5.674500195700639
+    },
+    "acceptance_rate": {
+      "mean": 0.0,
+      "std": 0.0,
+      "p95": 0.0
+    },
+    "acceptance_length": {
+      "mean": 0.0,
+      "std": 0.0,
+      "p95": 0.0
+    },
+    "ttft_ms": {
+      "mean": 525.8386405039346,
+      "std": 121.0243454988813,
+      "p95": 634.7605514529278
+    },
+    "wall_clock_ms": {
+      "mean": 10075.443845489644,
+      "std": 4613.293063492165,
+      "p95": 14227.407602632593
+    },
+    "draft_overhead_ratio": {
+      "mean": 0.08087441098357431,
+      "std": 0.03692883831169691,
+      "p95": 0.11411036546410153
+    },
+    "peak_vram_gb": {
+      "mean": 9.420076370239258,
+      "std": 0.6293368339538574,
+      "p95": 9.98647952079773
+    },
+    "total_tokens": {
+      "mean": 32.0,
+      "std": 0.0,
+      "p95": 32.0
+    }
+  },
+  "per_prompt": [
+    {
+      "prompt_index": 0,
+      "total_tokens": 32,
+      "rounds": 16,
+      "wall_clock_ms": 14688.74,
+      "ttft_ms": 646.86,
+      "tps": 2.18,
+      "acceptance_rate": 0.0,
+      "acceptance_length": 0.0,
+      "draft_overhead": 0.0439,
+      "peak_vram_gb": 10.05,
+      "round_details": [
+        {
+          "round": 0,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.23,
+          "verify_ms": 710.8
+        },
+        {
+          "round": 1,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.18,
+          "verify_ms": 709.99
+        },
+        {
+          "round": 2,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.04,
+          "verify_ms": 710.06
+        },
+        {
+          "round": 3,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.69,
+          "verify_ms": 708.99
+        },
+        {
+          "round": 4,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 41.45,
+          "verify_ms": 712.77
+        },
+        {
+          "round": 5,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.48,
+          "verify_ms": 710.82
+        },
+        {
+          "round": 6,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.45,
+          "verify_ms": 712.4
+        },
+        {
+          "round": 7,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.59,
+          "verify_ms": 712.66
+        },
+        {
+          "round": 8,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.42,
+          "verify_ms": 712.03
+        },
+        {
+          "round": 9,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.95,
+          "verify_ms": 712.74
+        },
+        {
+          "round": 10,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.19,
+          "verify_ms": 712.57
+        },
+        {
+          "round": 11,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.22,
+          "verify_ms": 714.87
+        },
+        {
+          "round": 12,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.87,
+          "verify_ms": 713.17
+        },
+        {
+          "round": 13,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.62,
+          "verify_ms": 712.07
+        },
+        {
+          "round": 14,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.91,
+          "verify_ms": 714.48
+        },
+        {
+          "round": 15,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.21,
+          "verify_ms": 715.08
+        }
+      ]
+    },
+    {
+      "prompt_index": 1,
+      "total_tokens": 32,
+      "rounds": 16,
+      "wall_clock_ms": 5462.15,
+      "ttft_ms": 404.81,
+      "tps": 5.86,
+      "acceptance_rate": 0.0,
+      "acceptance_length": 0.0,
+      "draft_overhead": 0.1178,
+      "peak_vram_gb": 8.79,
+      "round_details": [
+        {
+          "round": 0,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.1,
+          "verify_ms": 151.31
+        },
+        {
+          "round": 1,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.95,
+          "verify_ms": 154.99
+        },
+        {
+          "round": 2,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.98,
+          "verify_ms": 149.7
+        },
+        {
+          "round": 3,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.33,
+          "verify_ms": 149.56
+        },
+        {
+          "round": 4,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.91,
+          "verify_ms": 149.06
+        },
+        {
+          "round": 5,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.27,
+          "verify_ms": 161.16
+        },
+        {
+          "round": 6,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.61,
+          "verify_ms": 151.75
+        },
+        {
+          "round": 7,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.05,
+          "verify_ms": 150.84
+        },
+        {
+          "round": 8,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.12,
+          "verify_ms": 151.47
+        },
+        {
+          "round": 9,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.51,
+          "verify_ms": 149.09
+        },
+        {
+          "round": 10,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.1,
+          "verify_ms": 151.42
+        },
+        {
+          "round": 11,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.09,
+          "verify_ms": 150.39
+        },
+        {
+          "round": 12,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.71,
+          "verify_ms": 151.68
+        },
+        {
+          "round": 13,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 40.29,
+          "verify_ms": 150.2
+        },
+        {
+          "round": 14,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.65,
+          "verify_ms": 148.76
+        },
+        {
+          "round": 15,
+          "proposed": 6,
+          "accepted": 0,
+          "bonus": true,
+          "produced": 2,
+          "draft_ms": 39.81,
+          "verify_ms": 153.71
+        }
+      ]
+    }
+  ]
+}
