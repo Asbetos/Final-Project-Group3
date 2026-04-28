@@ -13,7 +13,7 @@ This project investigates two inference-acceleration modules for Gemma models:
 
 The overall goal is to reduce decoding latency and increase throughput without changing the target model's output distribution. The first module evaluates the classical target-draft speculative decoding setup. The second module studies a more compact approach, EAGLE-3, which predicts future tokens from the target model's hidden states instead of from a second full language model.
 
-This report is written around the actual repository state. It reports completed pair `F` benchmark results, completed EAGLE-3 training results, and the currently available partial EAGLE evaluation outputs. Missing final EAGLE inference results are left as placeholders rather than guessed.
+This report is written around the actual repository state. It reports completed pair `F` benchmark results, completed EAGLE-3 training results, and the completed EAGLE-3 inference sweep for the active Gemma-3-12B configuration.
 
 ## 2. Shared Data, Model Context, and Evaluation Framework
 
@@ -312,13 +312,13 @@ Figure 7 plots the logged training loss from the completed run.
 
 Figure 7 shows a steep early drop in loss followed by a much slower convergence phase. The final epochs are comparatively stable and remain below `1.0`, which is strong evidence that the head learned a much closer approximation to the target distribution than at initialization.
 
-### 4.5 Ongoing Inference Results
+### 4.5 Final Inference Results
 
-The EAGLE-3 evaluation sweep is currently running. The repository already contains partial baseline outputs in:
+The completed EAGLE-3 evaluation outputs are stored in:
 
 `Code/eagle3-gemma3-12B/results/eagle3_gemma3_full/summary.csv`
 
-The baseline rows available at the time of this report revision are:
+The baseline reference rows for pair `I` are:
 
 | Task | Temperature | Mean TPS | Mean TTFT (ms) | Mean Peak VRAM (GB) |
 | --- | --- | --- | --- | --- |
@@ -331,28 +331,31 @@ The baseline rows available at the time of this report revision are:
 | `cnn_dailymail` | 0.0 | 8.38 | 473.80 | 8.45 |
 | `cnn_dailymail` | 0.6 | 8.30 | 475.55 | 8.45 |
 | `cnn_dailymail` | 1.0 | 8.53 | 472.96 | 8.45 |
+| `writingprompts` | 0.0 | 8.27 | 172.87 | 7.96 |
+| `writingprompts` | 0.6 | 8.40 | 172.13 | 7.96 |
+| `writingprompts` | 1.0 | 8.75 | 169.50 | 7.96 |
 
-Figure 8 summarizes the completed baseline portion of the ongoing EAGLE evaluation.
-
-![Figure 8. Partial EAGLE evaluation results showing baseline TPS completed so far for the active Gemma-3-12B run. Source: local project artifact generated from the ongoing `summary.csv`.](assets/eagle3_partial_baseline_tps.png)
-
-Figure 8 should be interpreted carefully. It is not the final EAGLE result figure. It only summarizes the baseline rows that have already completed while the accelerated EAGLE configurations are still running.
-
-The correct current status is:
-
-1. EAGLE-3 training is complete.
-2. The final checkpoint exists.
-3. The full evaluation sweep is in progress.
-4. The final accelerated rows are not complete enough yet to report definitive speedup or acceptance results.
-
-For that reason, the final EAGLE inference summary is intentionally left as a placeholder.
+The best completed EAGLE configuration for each task is shown below.
 
 | Task | Best Tree Budget | Best Temperature | Mean TPS | Speedup | Mean Acceptance Rate | Mean TTFT (ms) | Mean Peak VRAM (GB) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `humaneval` | `[fill after eval completes]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` |
-| `triviaqa` | `[fill after eval completes]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` |
-| `cnn_dailymail` | `[fill after eval completes]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` |
-| `writingprompts` | `[fill after eval completes]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` | `[fill]` |
+| `humaneval` | 20 | 1.0 | 7.61 | 0.893 | 0.0974 | 202.53 | 8.29 |
+| `triviaqa` | 20 | 0.0 | 20.87 | 2.368 | 0.8977 | 162.60 | 8.11 |
+| `cnn_dailymail` | 20 | 0.6 | 6.03 | 0.727 | 0.0803 | 476.55 | 9.25 |
+| `writingprompts` | 20 | 0.0 | 8.01 | 0.969 | 0.2206 | 169.72 | 8.39 |
+
+Figure 8 summarizes the final EAGLE speedup pattern across both tree budgets and all temperatures.
+
+![Figure 8. Final EAGLE-3 speedup heatmap for the Gemma-3-12B target across all completed tasks, temperatures, and tree budgets. Source: generated from the final `results/eagle3_gemma3_full/summary.csv`.](assets/eagle3_final_speedup_heatmap.png)
+
+Figure 8 makes the task-dependent behavior very clear.
+
+1. `triviaqa` is the strongest EAGLE task by far, peaking at `2.368x` speedup for `tree_budget = 20` and `temperature = 0.0`.
+2. `humaneval` improves as temperature increases, but all completed configurations remain below baseline. Its best completed speedup is `0.893x`.
+3. `writingprompts` gets close to baseline, especially at `tree_budget = 20` and `temperature = 0.0`, but does not exceed it.
+4. `cnn_dailymail` remains the hardest case. Even after recovery of the long-context failures, all EAGLE configurations remain below baseline, with the best completed result at `0.727x`.
+
+Another important pattern is that `tree_budget = 20` produced the best result for every task. Increasing the tree budget to `60` did not improve the best final outcome on any task in this sweep.
 
 ## 5. Summary and Conclusions
 
@@ -360,7 +363,7 @@ The two modules together give a coherent picture of inference acceleration for G
 
 The standard speculative-decoding module already provides a completed benchmark result set. Pair `F` demonstrates that a reasonably aligned draft model can significantly improve throughput on some tasks, especially code completion and short-answer question answering. However, the completed results also show that speculative decoding is not universally beneficial. When acceptance drops too low, the verification overhead outweighs the drafting advantage.
 
-The EAGLE-3 module advances the project beyond the standard two-model setup. Instead of using a full separate draft model, it trains a dedicated draft head on top of the target model's hidden states. The completed training logs, checkpoints, and partial ongoing evaluation outputs show that the method is implemented end-to-end and is actively being benchmarked.
+The EAGLE-3 module advances the project beyond the standard two-model setup. Instead of using a full separate draft model, it trains a dedicated draft head on top of the target model's hidden states. The completed training logs, checkpoints, and finished inference sweep show that the method is implemented end-to-end and can produce strong gains on selected tasks.
 
 The most important lessons from the project are:
 
@@ -369,7 +372,7 @@ The most important lessons from the project are:
 3. Practical memory usage matters as much as algorithmic elegance.
 4. For EAGLE-3, engineering details such as cache handling, quantization, and checkpointing are essential to making the method usable in practice.
 
-The most important remaining task is to finish the ongoing EAGLE evaluation sweep and replace the placeholder table with final measured speedup, acceptance, and latency results.
+The most important next step is to improve long-context EAGLE verification so that tasks like `cnn_dailymail` can avoid the fallback path and become competitive with baseline throughput.
 
 ## 6. References
 
