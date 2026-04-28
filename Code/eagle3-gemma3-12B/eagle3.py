@@ -877,23 +877,33 @@ def _extract_target_features(
     # Determine which tokens to feed (incremental if cache exists)
     if past_key_values is not None and cache_position_start > 0:
         feed_ids = input_ids[:, cache_position_start:]
+        feed_start = cache_position_start
         if feed_ids.shape[1] == 0:
             # Cache already covers all positions (happens after tree verification
             # updates the cache). Trim the last cache entry and re-feed the last
             # token so we can extract hidden states for the draft head.
             _trim_kv_cache_by_one(past_key_values)
             feed_ids = input_ids[:, -1:]
+            feed_start = input_ids.shape[1] - 1
+        cache_position = torch.arange(
+            feed_start,
+            feed_start + feed_ids.shape[1],
+            device=input_ids.device,
+        )
         out = target_model(
             input_ids=feed_ids,
             attention_mask=attention_mask,
             past_key_values=past_key_values,
+            cache_position=cache_position,
             use_cache=True,
             output_hidden_states=True,
         )
     else:
+        cache_position = torch.arange(input_ids.shape[1], device=input_ids.device)
         out = target_model(
             input_ids=input_ids,
             attention_mask=attention_mask,
+            cache_position=cache_position,
             use_cache=True,
             output_hidden_states=True,
         )
@@ -1105,16 +1115,44 @@ def eagle3_decode(
             [full_mask, torch.ones(1, len(path_token_ids), device=device, dtype=full_mask.dtype)],
             dim=1,
         )
+        verify_cache_position = torch.arange(
+            target_cache_len,
+            target_cache_len + path_tensor.shape[1],
+            device=device,
+        )
 
         with CudaTimer() as verify_timer, torch.amp.autocast("cuda", dtype=torch.bfloat16):
-            verify_out = target_model(
-                input_ids=path_tensor,
-                attention_mask=path_mask,
-                past_key_values=target_cache,
-                use_cache=True,
-            )
+            try:
+                verify_out = target_model(
+                    input_ids=path_tensor,
+                    attention_mask=path_mask,
+                    past_key_values=target_cache,
+                    cache_position=verify_cache_position,
+                    use_cache=True,
+                )
+                verify_logits = verify_out.logits  # (1, len(path), V)
+            except RuntimeError as err:
+                err_msg = str(err)
+                if "expanded size of the tensor" not in err_msg:
+                    raise
+
+                # Gemma-3 SDPA occasionally hits an off-by-one cache/mask mismatch
+                # on long prompts. Fall back to a full forward over prefix + path
+                # for this verification step instead of using cached verification.
+                logger.warning(
+                    "Falling back to uncached EAGLE verification at context=%d, path_len=%d: %s",
+                    current_len,
+                    path_tensor.shape[1],
+                    err_msg,
+                )
+                verify_full_ids = torch.cat([full_ids, path_tensor], dim=1)
+                verify_out = target_model(
+                    input_ids=verify_full_ids,
+                    attention_mask=path_mask,
+                    use_cache=True,
+                )
+                verify_logits = verify_out.logits[:, -path_tensor.shape[1]:, :]
         target_cache = _ensure_dynamic_cache(verify_out.past_key_values)
-        verify_logits = verify_out.logits  # (1, len(path), V)
 
         # ---- Step 4: Accept/reject each draft token ----
         # verify_logits[0, i, :] predicts what comes after path_token_ids[i].

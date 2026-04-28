@@ -1,0 +1,959 @@
+2026-04-27 18:55:22,706 [INFO] __main__: GPU: NVIDIA A10G (compute capability 8.6)
+2026-04-27 18:55:22,707 [INFO] __main__: Experiment grid: 2 pairs x 3 gammas x 3 temps x 4 tasks = 72 speculative + 24 baseline = 96 total configs
+2026-04-27 18:55:28,208 [INFO] __main__: ======================================================================
+2026-04-27 18:55:28,208 [INFO] __main__: Starting EAGLE-3 pair I
+2026-04-27 18:55:28,208 [INFO] __main__: ======================================================================
+2026-04-27 18:55:28,208 [INFO] runner: EAGLE-3 Pair I: 24 configs + baselines
+2026-04-27 18:55:28,216 [INFO] models: Loading EAGLE-3 pair I ...
+2026-04-27 18:55:28,281 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 18:55:28,339 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-27 18:55:28,400 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/google/gemma-3-12b-it/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-04-27 18:55:28,428 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/google/gemma-3-12b-it/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 18:55:30,369 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/models/google/gemma-3-12b-it "HTTP/1.1 200 OK"
+2026-04-27 18:55:30,372 [INFO] models: Loading model google/gemma-3-12b-it (4-bit=True) ...
+2026-04-27 18:55:30,466 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 18:55:30,505 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/1065 [00:00<?, ?it/s]Loading weights:   0%|          | 1/1065 [00:18<5:28:44, 18.54s/it]Loading weights:   0%|          | 3/1065 [00:19<1:28:15,  4.99s/it]Loading weights:   0%|          | 4/1065 [00:19<1:00:12,  3.40s/it]Loading weights:   0%|          | 5/1065 [00:20<45:29,  2.58s/it]  Loading weights:   1%|          | 11/1065 [00:20<12:24,  1.42it/s]Loading weights:   1%|          | 13/1065 [00:20<09:39,  1.81it/s]Loading weights:   1%|▏         | 14/1065 [00:20<08:27,  2.07it/s]Loading weights:   2%|▏         | 16/1065 [00:21<08:31,  2.05it/s]Loading weights:   2%|▏         | 17/1065 [00:22<09:48,  1.78it/s]Loading weights:   2%|▏         | 18/1065 [00:23<11:00,  1.58it/s]Loading weights:   2%|▏         | 24/1065 [00:24<04:27,  3.89it/s]Loading weights:   2%|▏         | 26/1065 [00:24<03:53,  4.45it/s]Loading weights:   3%|▎         | 27/1065 [00:24<03:37,  4.77it/s]Loading weights:   3%|▎         | 29/1065 [00:25<05:03,  3.42it/s]Loading weights:   3%|▎         | 30/1065 [00:26<06:50,  2.52it/s]Loading weights:   3%|▎         | 31/1065 [00:27<08:32,  2.02it/s]Loading weights:   3%|▎         | 37/1065 [00:27<03:38,  4.71it/s]Loading weights:   4%|▎         | 39/1065 [00:27<03:16,  5.23it/s]Loading weights:   4%|▍         | 40/1065 [00:27<03:05,  5.53it/s]Loading weights:   4%|▍         | 42/1065 [00:28<04:37,  3.68it/s]Loading weights:   4%|▍         | 43/1065 [00:29<06:26,  2.65it/s]Loading weights:   4%|▍         | 44/1065 [00:30<08:09,  2.08it/s]Loading weights:   5%|▍         | 50/1065 [00:30<03:30,  4.82it/s]Loading weights:   5%|▍         | 52/1065 [00:31<03:09,  5.34it/s]Loading weights:   5%|▍         | 53/1065 [00:31<02:59,  5.64it/s]Loading weights:   5%|▌         | 55/1065 [00:32<04:31,  3.72it/s]Loading weights:   5%|▌         | 56/1065 [00:33<06:19,  2.66it/s]Loading weights:   5%|▌         | 57/1065 [00:33<08:02,  2.09it/s]Loading weights:   6%|▌         | 63/1065 [00:34<03:27,  4.83it/s]Loading weights:   6%|▌         | 65/1065 [00:34<03:06,  5.35it/s]Loading weights:   6%|▌         | 66/1065 [00:34<02:56,  5.65it/s]Loading weights:   6%|▋         | 68/1065 [00:35<04:27,  3.72it/s]Loading weights:   6%|▋         | 69/1065 [00:36<06:14,  2.66it/s]Loading weights:   7%|▋         | 70/1065 [00:37<07:55,  2.09it/s]Loading weights:   7%|▋         | 76/1065 [00:37<03:24,  4.84it/s]Loading weights:   7%|▋         | 78/1065 [00:37<03:04,  5.35it/s]Loading weights:   7%|▋         | 79/1065 [00:38<02:54,  5.65it/s]Loading weights:   8%|▊         | 81/1065 [00:39<04:24,  3.72it/s]Loading weights:   8%|▊         | 82/1065 [00:39<06:09,  2.66it/s]Loading weights:   8%|▊         | 83/1065 [00:40<07:49,  2.09it/s]Loading weights:   8%|▊         | 89/1065 [00:41<03:21,  4.84it/s]Loading weights:   9%|▊         | 91/1065 [00:41<03:01,  5.36it/s]Loading weights:   9%|▊         | 92/1065 [00:41<02:52,  5.65it/s]Loading weights:   9%|▉         | 94/1065 [00:42<03:44,  4.32it/s]Loading weights:   9%|▉         | 95/1065 [00:42<04:19,  3.74it/s]Loading weights:   9%|▉         | 96/1065 [00:42<04:25,  3.65it/s]Loading weights:  10%|▉         | 102/1065 [00:43<02:00,  7.97it/s]Loading weights:  10%|▉         | 104/1065 [00:43<01:56,  8.25it/s]Loading weights:  10%|▉         | 106/1065 [00:43<01:41,  9.49it/s]Loading weights:  10%|█         | 108/1065 [00:44<02:34,  6.20it/s]Loading weights:  10%|█         | 109/1065 [00:44<03:09,  5.05it/s]Loading weights:  11%|█         | 115/1065 [00:44<01:42,  9.26it/s]Loading weights:  11%|█         | 117/1065 [00:44<01:44,  9.05it/s]Loading weights:  11%|█         | 119/1065 [00:45<01:33, 10.16it/s]Loading weights:  11%|█▏        | 121/1065 [00:46<02:59,  5.27it/s]Loading weights:  11%|█▏        | 122/1065 [00:46<03:39,  4.29it/s]Loading weights:  12%|█▏        | 128/1065 [00:46<01:58,  7.91it/s]Loading weights:  12%|█▏        | 130/1065 [00:47<01:56,  8.00it/s]Loading weights:  12%|█▏        | 132/1065 [00:47<01:42,  9.13it/s]Loading weights:  13%|█▎        | 134/1065 [00:47<02:19,  6.67it/s]Loading weights:  13%|█▎        | 136/1065 [00:47<02:08,  7.25it/s]Loading weights:  13%|█▎        | 143/1065 [00:47<01:02, 14.65it/s]Loading weights:  14%|█▎        | 146/1065 [00:48<01:05, 14.00it/s]Loading weights:  14%|█▍        | 149/1065 [00:49<02:38,  5.78it/s]Loading weights:  14%|█▍        | 154/1065 [00:49<01:55,  7.92it/s]Loading weights:  15%|█▍        | 156/1065 [00:50<01:50,  8.20it/s]Loading weights:  15%|█▍        | 158/1065 [00:50<01:38,  9.17it/s]Loading weights:  15%|█▌        | 160/1065 [00:51<03:49,  3.94it/s]Loading weights:  15%|█▌        | 162/1065 [00:52<04:32,  3.31it/s]Loading weights:  16%|█▌        | 167/1065 [00:52<02:47,  5.38it/s]Loading weights:  16%|█▌        | 169/1065 [00:53<02:34,  5.82it/s]Loading weights:  16%|█▌        | 171/1065 [00:53<02:10,  6.86it/s]Loading weights:  16%|█▌        | 173/1065 [00:54<04:50,  3.07it/s]Loading weights:  16%|█▋        | 174/1065 [00:55<06:07,  2.42it/s]Loading weights:  17%|█▋        | 180/1065 [00:56<03:01,  4.89it/s]Loading weights:  17%|█▋        | 182/1065 [00:56<02:44,  5.36it/s]Loading weights:  17%|█▋        | 184/1065 [00:56<02:18,  6.37it/s]Loading weights:  17%|█▋        | 186/1065 [00:58<04:53,  2.99it/s]Loading weights:  18%|█▊        | 187/1065 [00:59<06:07,  2.39it/s]Loading weights:  18%|█▊        | 193/1065 [00:59<03:01,  4.81it/s]Loading weights:  18%|█▊        | 195/1065 [00:59<02:44,  5.29it/s]Loading weights:  18%|█▊        | 197/1065 [00:59<02:17,  6.30it/s]Loading weights:  19%|█▊        | 199/1065 [01:01<05:01,  2.87it/s]Loading weights:  19%|█▉        | 200/1065 [01:02<06:13,  2.32it/s]Loading weights:  19%|█▉        | 206/1065 [01:02<03:02,  4.70it/s]Loading weights:  20%|█▉        | 208/1065 [01:02<02:45,  5.18it/s]Loading weights:  20%|█▉        | 210/1065 [01:03<02:18,  6.18it/s]Loading weights:  20%|█▉        | 212/1065 [01:04<04:59,  2.84it/s]Loading weights:  20%|██        | 213/1065 [01:05<06:09,  2.30it/s]Loading weights:  21%|██        | 219/1065 [01:06<03:02,  4.64it/s]Loading weights:  21%|██        | 221/1065 [01:06<02:43,  5.17it/s]Loading weights:  21%|██        | 223/1065 [01:06<02:16,  6.17it/s]Loading weights:  21%|██        | 225/1065 [01:08<05:00,  2.80it/s]Loading weights:  21%|██        | 226/1065 [01:09<06:08,  2.28it/s]Loading weights:  22%|██▏       | 232/1065 [01:09<03:00,  4.62it/s]Loading weights:  22%|██▏       | 234/1065 [01:09<02:42,  5.10it/s]Loading weights:  22%|██▏       | 236/1065 [01:09<02:16,  6.09it/s]Loading weights:  22%|██▏       | 238/1065 [01:11<04:54,  2.81it/s]Loading weights:  22%|██▏       | 239/1065 [01:12<06:01,  2.29it/s]Loading weights:  23%|██▎       | 245/1065 [01:12<02:56,  4.64it/s]Loading weights:  23%|██▎       | 247/1065 [01:13<02:39,  5.12it/s]Loading weights:  23%|██▎       | 249/1065 [01:13<02:13,  6.12it/s]Loading weights:  24%|██▎       | 251/1065 [01:15<04:50,  2.80it/s]Loading weights:  24%|██▎       | 252/1065 [01:16<05:56,  2.28it/s]Loading weights:  24%|██▍       | 258/1065 [01:16<02:54,  4.63it/s]Loading weights:  24%|██▍       | 260/1065 [01:16<02:37,  5.11it/s]Loading weights:  25%|██▍       | 262/1065 [01:16<02:11,  6.10it/s]Loading weights:  25%|██▍       | 264/1065 [01:18<04:45,  2.81it/s]Loading weights:  25%|██▍       | 265/1065 [01:19<05:49,  2.29it/s]Loading weights:  25%|██▌       | 271/1065 [01:19<02:51,  4.64it/s]Loading weights:  26%|██▌       | 273/1065 [01:19<02:34,  5.12it/s]Loading weights:  26%|██▌       | 275/1065 [01:20<02:09,  6.12it/s]Loading weights:  26%|██▌       | 277/1065 [01:21<04:41,  2.80it/s]Loading weights:  26%|██▌       | 278/1065 [01:22<05:45,  2.28it/s]Loading weights:  27%|██▋       | 284/1065 [01:23<02:48,  4.63it/s]Loading weights:  27%|██▋       | 286/1065 [01:23<02:32,  5.11it/s]Loading weights:  27%|██▋       | 288/1065 [01:23<02:07,  6.10it/s]Loading weights:  27%|██▋       | 290/1065 [01:25<04:37,  2.79it/s]Loading weights:  27%|██▋       | 291/1065 [01:26<05:41,  2.27it/s]Loading weights:  28%|██▊       | 297/1065 [01:26<02:46,  4.61it/s]Loading weights:  28%|██▊       | 299/1065 [01:26<02:30,  5.09it/s]Loading weights:  28%|██▊       | 301/1065 [01:26<02:05,  6.08it/s]Loading weights:  28%|██▊       | 303/1065 [01:28<04:33,  2.79it/s]Loading weights:  29%|██▊       | 304/1065 [01:29<05:35,  2.27it/s]Loading weights:  29%|██▉       | 310/1065 [01:29<02:43,  4.62it/s]Loading weights:  29%|██▉       | 312/1065 [01:30<02:27,  5.10it/s]Loading weights:  29%|██▉       | 314/1065 [01:30<02:03,  6.09it/s]Loading weights:  30%|██▉       | 316/1065 [01:32<04:28,  2.79it/s]Loading weights:  30%|██▉       | 317/1065 [01:33<05:28,  2.28it/s]Loading weights:  30%|███       | 323/1065 [01:33<02:40,  4.61it/s]Loading weights:  31%|███       | 325/1065 [01:33<02:25,  5.10it/s]Loading weights:  31%|███       | 327/1065 [01:33<02:01,  6.09it/s]Loading weights:  31%|███       | 329/1065 [01:35<04:24,  2.79it/s]Loading weights:  31%|███       | 330/1065 [01:36<05:23,  2.28it/s]Loading weights:  32%|███▏      | 336/1065 [01:36<02:38,  4.61it/s]Loading weights:  32%|███▏      | 338/1065 [01:36<02:22,  5.10it/s]Loading weights:  32%|███▏      | 340/1065 [01:37<01:59,  6.09it/s]Loading weights:  32%|███▏      | 342/1065 [01:38<04:19,  2.78it/s]Loading weights:  32%|███▏      | 343/1065 [01:39<05:18,  2.27it/s]Loading weights:  33%|███▎      | 349/1065 [01:40<02:35,  4.61it/s]Loading weights:  33%|███▎      | 351/1065 [01:40<02:20,  5.09it/s]Loading weights:  33%|███▎      | 353/1065 [01:40<01:56,  6.09it/s]Loading weights:  33%|███▎      | 355/1065 [01:42<04:15,  2.78it/s]Loading weights:  33%|███▎      | 356/1065 [01:43<05:12,  2.27it/s]Loading weights:  34%|███▍      | 362/1065 [01:43<02:32,  4.61it/s]Loading weights:  34%|███▍      | 364/1065 [01:43<02:17,  5.10it/s]Loading weights:  34%|███▍      | 366/1065 [01:43<01:54,  6.09it/s]Loading weights:  35%|███▍      | 368/1065 [01:45<04:10,  2.78it/s]Loading weights:  35%|███▍      | 369/1065 [01:46<05:06,  2.27it/s]Loading weights:  35%|███▌      | 375/1065 [01:46<02:29,  4.61it/s]Loading weights:  35%|███▌      | 377/1065 [01:47<02:15,  5.09it/s]Loading weights:  36%|███▌      | 379/1065 [01:47<01:52,  6.08it/s]Loading weights:  36%|███▌      | 381/1065 [01:49<04:06,  2.78it/s]Loading weights:  36%|███▌      | 382/1065 [01:50<05:01,  2.27it/s]Loading weights:  36%|███▋      | 388/1065 [01:50<02:26,  4.61it/s]Loading weights:  37%|███▋      | 390/1065 [01:50<02:12,  5.09it/s]Loading weights:  37%|███▋      | 392/1065 [01:50<01:50,  6.08it/s]Loading weights:  37%|███▋      | 394/1065 [01:52<04:02,  2.77it/s]Loading weights:  37%|███▋      | 395/1065 [01:53<04:55,  2.27it/s]Loading weights:  38%|███▊      | 401/1065 [01:53<02:24,  4.61it/s]Loading weights:  38%|███▊      | 403/1065 [01:54<02:10,  5.09it/s]Loading weights:  38%|███▊      | 405/1065 [01:54<01:48,  6.08it/s]Loading weights:  38%|███▊      | 407/1065 [01:56<03:56,  2.78it/s]Loading weights:  38%|███▊      | 408/1065 [01:56<04:50,  2.26it/s]Loading weights:  39%|███▉      | 414/1065 [01:57<02:21,  4.62it/s]Loading weights:  39%|███▉      | 416/1065 [01:57<02:07,  5.10it/s]Loading weights:  39%|███▉      | 418/1065 [01:57<01:46,  6.09it/s]Loading weights:  39%|███▉      | 420/1065 [01:59<03:51,  2.79it/s]Loading weights:  40%|███▉      | 421/1065 [02:00<04:43,  2.27it/s]Loading weights:  40%|████      | 427/1065 [02:00<02:18,  4.61it/s]Loading weights:  40%|████      | 429/1065 [02:00<02:04,  5.09it/s]Loading weights:  40%|████      | 431/1065 [02:00<01:44,  6.08it/s]Loading weights:  41%|████      | 433/1065 [02:02<03:47,  2.78it/s]Loading weights:  41%|████      | 434/1065 [02:03<04:38,  2.26it/s]Loading weights:  41%|████▏     | 440/1065 [02:04<02:15,  4.60it/s]Loading weights:  42%|████▏     | 442/1065 [02:04<02:02,  5.09it/s]Loading weights:  42%|████▏     | 444/1065 [02:04<01:42,  6.08it/s]Loading weights:  42%|████▏     | 446/1065 [02:06<03:42,  2.78it/s]Loading weights:  42%|████▏     | 447/1065 [02:07<04:32,  2.27it/s]Loading weights:  43%|████▎     | 453/1065 [02:07<02:13,  4.60it/s]Loading weights:  43%|████▎     | 455/1065 [02:07<01:59,  5.09it/s]Loading weights:  43%|████▎     | 457/1065 [02:07<01:40,  6.08it/s]Loading weights:  43%|████▎     | 459/1065 [02:09<03:38,  2.78it/s]Loading weights:  43%|████▎     | 460/1065 [02:10<04:26,  2.27it/s]Loading weights:  44%|████▍     | 466/1065 [02:10<02:10,  4.60it/s]Loading weights:  44%|████▍     | 468/1065 [02:11<01:57,  5.09it/s]Loading weights:  44%|████▍     | 470/1065 [02:11<01:37,  6.07it/s]Loading weights:  44%|████▍     | 472/1065 [02:13<03:33,  2.78it/s]Loading weights:  44%|████▍     | 473/1065 [02:13<04:21,  2.27it/s]Loading weights:  45%|████▍     | 479/1065 [02:14<02:07,  4.60it/s]Loading weights:  45%|████▌     | 481/1065 [02:14<01:54,  5.09it/s]Loading weights:  45%|████▌     | 483/1065 [02:14<01:35,  6.08it/s]Loading weights:  46%|████▌     | 485/1065 [02:16<03:28,  2.78it/s]Loading weights:  46%|████▌     | 486/1065 [02:17<04:15,  2.27it/s]Loading weights:  46%|████▌     | 492/1065 [02:17<02:04,  4.60it/s]Loading weights:  46%|████▋     | 494/1065 [02:17<01:52,  5.08it/s]Loading weights:  47%|████▋     | 496/1065 [02:18<01:33,  6.08it/s]Loading weights:  47%|████▋     | 498/1065 [02:19<03:23,  2.79it/s]Loading weights:  47%|████▋     | 499/1065 [02:20<04:09,  2.27it/s]Loading weights:  47%|████▋     | 505/1065 [02:21<02:01,  4.61it/s]Loading weights:  48%|████▊     | 507/1065 [02:21<01:49,  5.09it/s]Loading weights:  48%|████▊     | 509/1065 [02:21<01:31,  6.08it/s]Loading weights:  48%|████▊     | 511/1065 [02:23<03:18,  2.79it/s]Loading weights:  48%|████▊     | 512/1065 [02:24<04:03,  2.27it/s]Loading weights:  49%|████▊     | 518/1065 [02:24<01:58,  4.60it/s]Loading weights:  49%|████▉     | 520/1065 [02:24<01:47,  5.09it/s]Loading weights:  49%|████▉     | 522/1065 [02:24<01:29,  6.08it/s]Loading weights:  49%|████▉     | 524/1065 [02:26<03:14,  2.78it/s]Loading weights:  49%|████▉     | 525/1065 [02:27<03:57,  2.27it/s]Loading weights:  50%|████▉     | 531/1065 [02:27<01:55,  4.61it/s]Loading weights:  50%|█████     | 533/1065 [02:28<01:44,  5.09it/s]Loading weights:  50%|█████     | 535/1065 [02:28<01:27,  6.08it/s]Loading weights:  50%|█████     | 537/1065 [02:30<03:09,  2.78it/s]Loading weights:  51%|█████     | 538/1065 [02:31<03:52,  2.27it/s]Loading weights:  51%|█████     | 544/1065 [02:31<01:53,  4.61it/s]Loading weights:  51%|█████▏    | 546/1065 [02:31<01:41,  5.09it/s]Loading weights:  51%|█████▏    | 548/1065 [02:31<01:25,  6.08it/s]Loading weights:  52%|█████▏    | 550/1065 [02:33<03:04,  2.79it/s]Loading weights:  52%|█████▏    | 551/1065 [02:34<03:46,  2.27it/s]Loading weights:  52%|█████▏    | 557/1065 [02:34<01:50,  4.60it/s]Loading weights:  52%|█████▏    | 559/1065 [02:34<01:39,  5.08it/s]Loading weights:  53%|█████▎    | 561/1065 [02:35<01:22,  6.07it/s]Loading weights:  53%|█████▎    | 563/1065 [02:37<03:00,  2.78it/s]Loading weights:  53%|█████▎    | 564/1065 [02:37<03:40,  2.27it/s]Loading weights:  54%|█████▎    | 570/1065 [02:38<01:47,  4.60it/s]Loading weights:  54%|█████▎    | 572/1065 [02:38<01:36,  5.09it/s]Loading weights:  54%|█████▍    | 574/1065 [02:38<01:20,  6.07it/s]Loading weights:  54%|█████▍    | 576/1065 [02:40<02:55,  2.78it/s]Loading weights:  54%|█████▍    | 577/1065 [02:41<03:35,  2.27it/s]Loading weights:  55%|█████▍    | 583/1065 [02:41<01:44,  4.60it/s]Loading weights:  55%|█████▍    | 585/1065 [02:41<01:34,  5.08it/s]Loading weights:  55%|█████▌    | 587/1065 [02:41<01:18,  6.08it/s]Loading weights:  55%|█████▌    | 589/1065 [02:43<02:50,  2.78it/s]Loading weights:  55%|█████▌    | 590/1065 [02:44<03:29,  2.27it/s]Loading weights:  56%|█████▌    | 596/1065 [02:44<01:41,  4.61it/s]Loading weights:  56%|█████▌    | 598/1065 [02:45<01:31,  5.09it/s]Loading weights:  56%|█████▋    | 600/1065 [02:45<01:16,  6.08it/s]Loading weights:  57%|█████▋    | 602/1065 [02:47<02:46,  2.79it/s]Loading weights:  57%|█████▋    | 603/1065 [02:48<03:23,  2.27it/s]Loading weights:  57%|█████▋    | 609/1065 [02:48<01:39,  4.60it/s]Loading weights:  57%|█████▋    | 611/1065 [02:48<01:29,  5.09it/s]Loading weights:  58%|█████▊    | 613/1065 [02:48<01:14,  6.08it/s]Loading weights:  58%|█████▊    | 615/1065 [02:50<02:41,  2.79it/s]Loading weights:  58%|█████▊    | 616/1065 [02:51<03:17,  2.27it/s]Loading weights:  58%|█████▊    | 622/1065 [02:51<01:36,  4.61it/s]Loading weights:  59%|█████▊    | 624/1065 [02:52<01:26,  5.09it/s]Loading weights:  59%|█████▉    | 626/1065 [02:52<01:12,  6.09it/s]Loading weights:  59%|█████▉    | 631/1065 [02:52<00:44,  9.70it/s]Loading weights:  60%|██████    | 639/1065 [02:52<00:25, 16.58it/s]Loading weights:  61%|██████▏   | 653/1065 [02:52<00:13, 30.51it/s]Loading weights:  62%|██████▏   | 659/1065 [02:52<00:11, 34.07it/s]Loading weights:  63%|██████▎   | 669/1065 [02:52<00:09, 43.91it/s]Loading weights:  63%|██████▎   | 675/1065 [02:52<00:08, 45.58it/s]Loading weights:  64%|██████▍   | 685/1065 [02:53<00:06, 54.78it/s]Loading weights:  65%|██████▍   | 692/1065 [02:53<00:06, 56.15it/s]Loading weights:  66%|██████▌   | 701/1065 [02:53<00:05, 61.60it/s]Loading weights:  66%|██████▋   | 708/1065 [02:53<00:05, 61.56it/s]Loading weights:  67%|██████▋   | 717/1065 [02:53<00:05, 65.80it/s]Loading weights:  68%|██████▊   | 724/1065 [02:53<00:05, 64.54it/s]Loading weights:  69%|██████▉   | 733/1065 [02:53<00:04, 68.03it/s]Loading weights:  69%|██████▉   | 740/1065 [02:53<00:04, 66.17it/s]Loading weights:  70%|███████   | 749/1065 [02:54<00:04, 68.85it/s]Loading weights:  71%|███████   | 756/1065 [02:54<00:04, 66.71it/s]Loading weights:  72%|███████▏  | 765/1065 [02:54<00:04, 69.64it/s]Loading weights:  72%|███████▏  | 772/1065 [02:54<00:04, 67.24it/s]Loading weights:  73%|███████▎  | 781/1065 [02:54<00:04, 70.00it/s]Loading weights:  74%|███████▍  | 789/1065 [02:54<00:04, 66.56it/s]Loading weights:  75%|███████▌  | 799/1065 [02:54<00:04, 63.53it/s]Loading weights:  76%|███████▋  | 813/1065 [02:54<00:03, 72.22it/s]Loading weights:  77%|███████▋  | 821/1065 [02:55<00:03, 68.54it/s]Loading weights:  78%|███████▊  | 831/1065 [02:55<00:03, 64.51it/s]Loading weights:  79%|███████▉  | 845/1065 [02:55<00:03, 72.03it/s]Loading weights:  80%|████████  | 853/1065 [02:55<00:03, 68.67it/s]Loading weights:  81%|████████  | 863/1065 [02:55<00:03, 64.99it/s]Loading weights:  82%|████████▏ | 877/1065 [02:55<00:02, 72.47it/s]Loading weights:  83%|████████▎ | 885/1065 [02:56<00:02, 69.06it/s]Loading weights:  84%|████████▍ | 895/1065 [02:56<00:02, 65.22it/s]Loading weights:  85%|████████▌ | 909/1065 [02:56<00:02, 72.27it/s]Loading weights:  86%|████████▌ | 917/1065 [02:56<00:02, 68.96it/s]Loading weights:  87%|████████▋ | 927/1065 [02:56<00:02, 65.25it/s]Loading weights:  88%|████████▊ | 941/1065 [02:56<00:01, 72.51it/s]Loading weights:  89%|████████▉ | 949/1065 [02:56<00:01, 69.14it/s]Loading weights:  90%|█████████ | 959/1065 [02:57<00:01, 65.56it/s]Loading weights:  91%|█████████▏| 973/1065 [02:57<00:01, 72.80it/s]Loading weights:  92%|█████████▏| 981/1065 [02:57<00:01, 69.20it/s]Loading weights:  93%|█████████▎| 991/1065 [02:57<00:01, 65.45it/s]Loading weights:  94%|█████████▍| 1005/1065 [02:57<00:00, 72.47it/s]Loading weights:  95%|█████████▌| 1013/1065 [02:57<00:00, 69.27it/s]Loading weights:  96%|█████████▌| 1023/1065 [02:58<00:00, 65.25it/s]Loading weights:  97%|█████████▋| 1037/1065 [02:58<00:00, 72.55it/s]Loading weights:  98%|█████████▊| 1045/1065 [02:58<00:00, 69.07it/s]Loading weights:  99%|█████████▉| 1055/1065 [02:58<00:00, 65.36it/s]Loading weights: 100%|██████████| 1065/1065 [02:58<00:00,  5.96it/s]
+2026-04-27 18:58:32,570 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-04-27 18:58:32,599 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/google/gemma-3-12b-it/resolve/main/custom_generate/generate.py "HTTP/1.1 404 Not Found"
+2026-04-27 18:58:32,604 [INFO] models: Model google/gemma-3-12b-it loaded. VRAM allocated: 7.26 GB
+2026-04-27 18:58:35,193 [INFO] eagle3_train: Loaded checkpoint: /home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt (step=19503, epoch=3, batch=0)
+2026-04-27 18:58:35,240 [INFO] models: Loaded EAGLE-3 checkpoint: /home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt
+2026-04-27 18:58:35,240 [INFO] models: EAGLE-3 pair I loaded. Total VRAM: 7.82 GB
+2026-04-27 18:58:35,241 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 18:58:35,259 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 18:58:35,264 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 18:58:35,289 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 18:58:35,307 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 18:58:35,330 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/openai/openai_humaneval/revision/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544 "HTTP/1.1 200 OK"
+2026-04-27 18:58:35,351 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 18:58:35,395 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 18:58:35,415 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/openai/openai_humaneval/tree/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 18:58:35,435 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/openai/openai_humaneval/tree/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-04-27 18:58:35,464 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 18:58:35,481 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 18:58:35,517 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-27 18:58:35,517 [INFO] runner: Running baseline: I_humaneval_baseline_t0.0
+2026-04-27 19:11:04,050 [INFO] runner: Baseline I_humaneval_baseline_t0.0 done. Mean TPS: 8.7
+2026-04-27 19:11:04,050 [INFO] runner: Running baseline: I_humaneval_baseline_t0.6
+2026-04-27 19:23:53,396 [INFO] runner: Baseline I_humaneval_baseline_t0.6 done. Mean TPS: 8.5
+2026-04-27 19:23:53,396 [INFO] runner: Running baseline: I_humaneval_baseline_t1.0
+2026-04-27 19:36:37,832 [INFO] runner: Baseline I_humaneval_baseline_t1.0 done. Mean TPS: 8.5
+2026-04-27 19:36:37,832 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-27 19:36:37,876 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 19:36:37,895 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-27 19:36:37,927 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 19:36:37,957 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 19:36:38,033 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/mandarjoshi/trivia_qa/revision/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f "HTTP/1.1 200 OK"
+2026-04-27 19:36:38,052 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 19:36:38,100 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-27 19:36:38,136 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/mandarjoshi/trivia_qa/tree/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/rc?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 19:36:38,159 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/mandarjoshi/trivia_qa/tree/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-04-27 19:36:38,187 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 19:36:38,596 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-27 19:36:38,609 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-27 19:36:38,610 [INFO] runner: Running baseline: I_triviaqa_baseline_t0.0
+2026-04-27 19:48:55,633 [INFO] runner: Baseline I_triviaqa_baseline_t0.0 done. Mean TPS: 8.8
+2026-04-27 19:48:55,633 [INFO] runner: Running baseline: I_triviaqa_baseline_t0.6
+2026-04-27 20:01:38,723 [INFO] runner: Baseline I_triviaqa_baseline_t0.6 done. Mean TPS: 8.5
+2026-04-27 20:01:38,723 [INFO] runner: Running baseline: I_triviaqa_baseline_t1.0
+2026-04-27 20:14:14,568 [INFO] runner: Baseline I_triviaqa_baseline_t1.0 done. Mean TPS: 8.6
+2026-04-27 20:14:14,568 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-27 20:14:14,610 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 20:14:14,633 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-27 20:14:14,658 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 20:14:14,698 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 20:14:14,728 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/abisee/cnn_dailymail/revision/96df5e686bee6baa90b8bee7c28b81fa3fa6223d "HTTP/1.1 200 OK"
+2026-04-27 20:14:14,746 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 20:14:14,804 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-27 20:14:14,834 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/abisee/cnn_dailymail/tree/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/1.0.0?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 20:14:14,855 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/abisee/cnn_dailymail/tree/96df5e686bee6baa90b8bee7c28b81fa3fa6223d?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-04-27 20:14:14,875 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 20:14:14,901 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/abisee/cnn_dailymail/tree/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/3.0.0?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 20:14:15,206 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-27 20:14:15,313 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-27 20:14:15,313 [INFO] runner: Running baseline: I_cnn_dailymail_baseline_t0.0
+2026-04-27 20:27:11,897 [INFO] runner: Baseline I_cnn_dailymail_baseline_t0.0 done. Mean TPS: 8.4
+2026-04-27 20:27:11,897 [INFO] runner: Running baseline: I_cnn_dailymail_baseline_t0.6
+2026-04-27 20:40:17,073 [INFO] runner: Baseline I_cnn_dailymail_baseline_t0.6 done. Mean TPS: 8.3
+2026-04-27 20:40:17,073 [INFO] runner: Running baseline: I_cnn_dailymail_baseline_t1.0
+2026-04-27 20:53:00,130 [INFO] runner: Baseline I_cnn_dailymail_baseline_t1.0 done. Mean TPS: 8.5
+2026-04-27 20:53:00,130 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-27 20:53:00,158 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 20:53:00,186 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-27 20:53:00,209 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 20:53:00,246 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 20:53:00,272 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/euclaise/writingprompts/revision/35f0aa359452ba8147b34d925684fccee26679cc "HTTP/1.1 200 OK"
+2026-04-27 20:53:00,295 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 20:53:00,337 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-27 20:53:00,363 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/euclaise/writingprompts/tree/35f0aa359452ba8147b34d925684fccee26679cc/data?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 20:53:00,384 [INFO] httpx: HTTP Request: GET https://huggingface.co/api/datasets/euclaise/writingprompts/tree/35f0aa359452ba8147b34d925684fccee26679cc?recursive=false&expand=false "HTTP/1.1 200 OK"
+2026-04-27 20:53:00,406 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 20:53:00,738 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-27 20:53:00,755 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-27 20:53:00,755 [INFO] runner: Running baseline: I_writingprompts_baseline_t0.0
+2026-04-27 21:06:06,489 [INFO] runner: Baseline I_writingprompts_baseline_t0.0 done. Mean TPS: 8.3
+2026-04-27 21:06:06,489 [INFO] runner: Running baseline: I_writingprompts_baseline_t0.6
+2026-04-27 21:19:00,548 [INFO] runner: Baseline I_writingprompts_baseline_t0.6 done. Mean TPS: 8.4
+2026-04-27 21:19:00,548 [INFO] runner: Running baseline: I_writingprompts_baseline_t1.0
+2026-04-27 21:31:24,221 [INFO] runner: Baseline I_writingprompts_baseline_t1.0 done. Mean TPS: 8.8
+2026-04-27 21:31:24,221 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb20_t0.0
+2026-04-27 21:31:24,221 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 21:31:24,274 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 21:31:24,293 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 21:31:24,312 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:31:24,345 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:31:24,367 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 21:31:24,400 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 21:31:24,434 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 21:31:24,444 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 21:31:24,467 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-27 21:34:49,631 [INFO] runner:   I_humaneval_tb20_t0.0: 10/50 prompts done
+2026-04-27 21:37:59,414 [INFO] runner:   I_humaneval_tb20_t0.0: 20/50 prompts done
+2026-04-27 21:41:10,835 [INFO] runner:   I_humaneval_tb20_t0.0: 30/50 prompts done
+2026-04-27 21:44:20,837 [INFO] runner:   I_humaneval_tb20_t0.0: 40/50 prompts done
+2026-04-27 21:47:34,409 [INFO] runner:   I_humaneval_tb20_t0.0: 50/50 prompts done
+2026-04-27 21:47:34,446 [INFO] runner: EAGLE-3 config I_humaneval_tb20_t0.0 complete. Mean TPS: 6.7
+2026-04-27 21:47:34,447 [INFO] runner: EAGLE-3 Pair I progress: 1/24 (speedup=0.77x)
+2026-04-27 21:47:34,447 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb20_t0.0
+2026-04-27 21:47:34,447 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-27 21:47:34,479 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 21:47:34,489 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-27 21:47:34,517 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:47:34,544 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:47:34,620 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 21:47:34,671 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-27 21:47:34,700 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 21:47:34,752 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-27 21:47:34,764 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-27 21:48:48,979 [INFO] runner:   I_triviaqa_tb20_t0.0: 10/50 prompts done
+2026-04-27 21:49:51,621 [INFO] runner:   I_triviaqa_tb20_t0.0: 20/50 prompts done
+2026-04-27 21:50:50,699 [INFO] runner:   I_triviaqa_tb20_t0.0: 30/50 prompts done
+2026-04-27 21:52:10,123 [INFO] runner:   I_triviaqa_tb20_t0.0: 40/50 prompts done
+2026-04-27 21:53:11,037 [INFO] runner:   I_triviaqa_tb20_t0.0: 50/50 prompts done
+2026-04-27 21:53:11,051 [INFO] runner: EAGLE-3 config I_triviaqa_tb20_t0.0 complete. Mean TPS: 20.9
+2026-04-27 21:53:11,051 [INFO] runner: EAGLE-3 Pair I progress: 2/24 (speedup=2.37x)
+2026-04-27 21:53:11,051 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb20_t0.0
+2026-04-27 21:53:11,052 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-27 21:53:11,082 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 21:53:11,089 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-27 21:53:11,108 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:11,136 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:11,170 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:11,236 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-27 21:53:11,262 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:11,279 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-27 21:53:11,384 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-27 21:53:12,119 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb20_t0.0 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1031) must match the existing size (1030) at non-singleton dimension 3.  Target sizes: [1, 16, 7, 1031].  Tensor sizes: [1, 1, 7, 1030]
+2026-04-27 21:53:12,126 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb20_t0.0
+2026-04-27 21:53:12,126 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-27 21:53:12,153 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 21:53:12,160 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-27 21:53:12,187 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:12,199 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:12,242 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:12,272 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-27 21:53:12,294 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 21:53:12,313 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-27 21:53:12,330 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-27 21:56:02,711 [INFO] runner:   I_writingprompts_tb20_t0.0: 10/50 prompts done
+2026-04-27 21:58:56,837 [INFO] runner:   I_writingprompts_tb20_t0.0: 20/50 prompts done
+2026-04-27 22:01:32,602 [INFO] runner:   I_writingprompts_tb20_t0.0: 30/50 prompts done
+2026-04-27 22:04:34,511 [INFO] runner:   I_writingprompts_tb20_t0.0: 40/50 prompts done
+2026-04-27 22:07:14,482 [INFO] runner:   I_writingprompts_tb20_t0.0: 50/50 prompts done
+2026-04-27 22:07:14,515 [INFO] runner: EAGLE-3 config I_writingprompts_tb20_t0.0 complete. Mean TPS: 8.0
+2026-04-27 22:07:14,516 [INFO] runner: EAGLE-3 Pair I progress: 4/24 (speedup=0.97x)
+2026-04-27 22:07:14,516 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb20_t0.6
+2026-04-27 22:07:14,516 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 22:07:14,540 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:07:14,546 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:07:14,566 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:07:14,596 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:07:14,626 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:07:14,670 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 22:07:14,730 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:07:14,740 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 22:07:14,763 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-27 22:10:18,252 [INFO] runner:   I_humaneval_tb20_t0.6: 10/50 prompts done
+2026-04-27 22:13:11,635 [INFO] runner:   I_humaneval_tb20_t0.6: 20/50 prompts done
+2026-04-27 22:16:04,815 [INFO] runner:   I_humaneval_tb20_t0.6: 30/50 prompts done
+2026-04-27 22:18:57,256 [INFO] runner:   I_humaneval_tb20_t0.6: 40/50 prompts done
+2026-04-27 22:21:49,647 [INFO] runner:   I_humaneval_tb20_t0.6: 50/50 prompts done
+2026-04-27 22:21:49,683 [INFO] runner: EAGLE-3 config I_humaneval_tb20_t0.6 complete. Mean TPS: 7.4
+2026-04-27 22:21:49,684 [INFO] runner: EAGLE-3 Pair I progress: 5/24 (speedup=0.88x)
+2026-04-27 22:21:49,684 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb20_t0.6
+2026-04-27 22:21:49,684 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-27 22:21:49,715 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:21:49,719 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:21:49,750 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:21:49,796 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:21:49,942 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:21:49,985 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-27 22:21:50,008 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:21:50,060 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-27 22:21:50,072 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-27 22:23:41,310 [INFO] runner:   I_triviaqa_tb20_t0.6: 10/50 prompts done
+2026-04-27 22:25:23,018 [INFO] runner:   I_triviaqa_tb20_t0.6: 20/50 prompts done
+2026-04-27 22:27:08,478 [INFO] runner:   I_triviaqa_tb20_t0.6: 30/50 prompts done
+2026-04-27 22:28:52,631 [INFO] runner:   I_triviaqa_tb20_t0.6: 40/50 prompts done
+2026-04-27 22:30:27,634 [INFO] runner:   I_triviaqa_tb20_t0.6: 50/50 prompts done
+2026-04-27 22:30:27,656 [INFO] runner: EAGLE-3 config I_triviaqa_tb20_t0.6 complete. Mean TPS: 12.8
+2026-04-27 22:30:27,657 [INFO] runner: EAGLE-3 Pair I progress: 6/24 (speedup=1.50x)
+2026-04-27 22:30:27,657 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb20_t0.6
+2026-04-27 22:30:27,657 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-27 22:30:27,688 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:30:27,693 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:30:27,713 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:27,753 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:27,789 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:27,846 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-27 22:30:27,870 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:27,888 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-27 22:30:27,994 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-27 22:30:28,674 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb20_t0.6 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1027) must match the existing size (1026) at non-singleton dimension 3.  Target sizes: [1, 16, 3, 1027].  Tensor sizes: [1, 1, 3, 1026]
+2026-04-27 22:30:28,676 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb20_t0.6
+2026-04-27 22:30:28,676 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-27 22:30:28,710 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:30:28,716 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:30:28,751 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:28,761 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:28,784 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:28,812 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-27 22:30:28,833 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:30:28,848 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-27 22:30:28,865 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-27 22:33:28,795 [INFO] runner:   I_writingprompts_tb20_t0.6: 10/50 prompts done
+2026-04-27 22:36:19,374 [INFO] runner:   I_writingprompts_tb20_t0.6: 20/50 prompts done
+2026-04-27 22:39:11,081 [INFO] runner:   I_writingprompts_tb20_t0.6: 30/50 prompts done
+2026-04-27 22:42:03,880 [INFO] runner:   I_writingprompts_tb20_t0.6: 40/50 prompts done
+2026-04-27 22:44:56,043 [INFO] runner:   I_writingprompts_tb20_t0.6: 50/50 prompts done
+2026-04-27 22:44:56,079 [INFO] runner: EAGLE-3 config I_writingprompts_tb20_t0.6 complete. Mean TPS: 7.5
+2026-04-27 22:44:56,080 [INFO] runner: EAGLE-3 Pair I progress: 8/24 (speedup=0.90x)
+2026-04-27 22:44:56,080 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb20_t1.0
+2026-04-27 22:44:56,080 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 22:44:56,109 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:44:56,114 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:44:56,132 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:44:56,164 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:44:56,186 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:44:56,217 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 22:44:56,238 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:44:56,248 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 22:44:56,272 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-27 22:47:58,558 [INFO] runner:   I_humaneval_tb20_t1.0: 10/50 prompts done
+2026-04-27 22:50:47,297 [INFO] runner:   I_humaneval_tb20_t1.0: 20/50 prompts done
+2026-04-27 22:53:35,782 [INFO] runner:   I_humaneval_tb20_t1.0: 30/50 prompts done
+2026-04-27 22:56:23,721 [INFO] runner:   I_humaneval_tb20_t1.0: 40/50 prompts done
+2026-04-27 22:59:11,061 [INFO] runner:   I_humaneval_tb20_t1.0: 50/50 prompts done
+2026-04-27 22:59:11,096 [INFO] runner: EAGLE-3 config I_humaneval_tb20_t1.0 complete. Mean TPS: 7.6
+2026-04-27 22:59:11,097 [INFO] runner: EAGLE-3 Pair I progress: 9/24 (speedup=0.89x)
+2026-04-27 22:59:11,097 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb20_t1.0
+2026-04-27 22:59:11,097 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-27 22:59:11,131 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 22:59:11,136 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-27 22:59:11,157 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:59:11,186 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 22:59:11,259 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 22:59:11,310 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-27 22:59:11,335 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 22:59:11,388 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-27 22:59:11,405 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-27 23:01:14,118 [INFO] runner:   I_triviaqa_tb20_t1.0: 10/50 prompts done
+2026-04-27 23:03:06,904 [INFO] runner:   I_triviaqa_tb20_t1.0: 20/50 prompts done
+2026-04-27 23:05:04,260 [INFO] runner:   I_triviaqa_tb20_t1.0: 30/50 prompts done
+2026-04-27 23:07:05,071 [INFO] runner:   I_triviaqa_tb20_t1.0: 40/50 prompts done
+2026-04-27 23:08:54,534 [INFO] runner:   I_triviaqa_tb20_t1.0: 50/50 prompts done
+2026-04-27 23:08:54,560 [INFO] runner: EAGLE-3 config I_triviaqa_tb20_t1.0 complete. Mean TPS: 11.3
+2026-04-27 23:08:54,560 [INFO] runner: EAGLE-3 Pair I progress: 10/24 (speedup=1.32x)
+2026-04-27 23:08:54,560 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb20_t1.0
+2026-04-27 23:08:54,560 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-27 23:08:54,588 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:08:54,592 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:08:54,615 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:54,643 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:54,669 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:54,712 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-27 23:08:54,737 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:54,753 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-27 23:08:54,860 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-27 23:08:55,540 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb20_t1.0 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1027) must match the existing size (1026) at non-singleton dimension 3.  Target sizes: [1, 16, 3, 1027].  Tensor sizes: [1, 1, 3, 1026]
+2026-04-27 23:08:55,542 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb20_t1.0
+2026-04-27 23:08:55,542 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-27 23:08:55,563 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:08:55,568 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:08:55,589 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:55,598 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:55,633 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:55,664 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-27 23:08:55,685 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:08:55,704 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-27 23:08:55,721 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-27 23:11:52,167 [INFO] runner:   I_writingprompts_tb20_t1.0: 10/50 prompts done
+2026-04-27 23:14:36,963 [INFO] runner:   I_writingprompts_tb20_t1.0: 20/50 prompts done
+2026-04-27 23:17:23,500 [INFO] runner:   I_writingprompts_tb20_t1.0: 30/50 prompts done
+2026-04-27 23:20:12,614 [INFO] runner:   I_writingprompts_tb20_t1.0: 40/50 prompts done
+2026-04-27 23:22:59,870 [INFO] runner:   I_writingprompts_tb20_t1.0: 50/50 prompts done
+2026-04-27 23:22:59,905 [INFO] runner: EAGLE-3 config I_writingprompts_tb20_t1.0 complete. Mean TPS: 7.7
+2026-04-27 23:22:59,906 [INFO] runner: EAGLE-3 Pair I progress: 12/24 (speedup=0.88x)
+2026-04-27 23:22:59,906 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb60_t0.0
+2026-04-27 23:22:59,906 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 23:22:59,935 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:22:59,940 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:22:59,960 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:22:59,987 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:23:00,020 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:23:00,067 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 23:23:00,086 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:23:00,096 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 23:23:00,119 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-27 23:26:22,394 [INFO] runner:   I_humaneval_tb60_t0.0: 10/50 prompts done
+2026-04-27 23:29:29,202 [INFO] runner:   I_humaneval_tb60_t0.0: 20/50 prompts done
+2026-04-27 23:32:38,480 [INFO] runner:   I_humaneval_tb60_t0.0: 30/50 prompts done
+2026-04-27 23:35:45,336 [INFO] runner:   I_humaneval_tb60_t0.0: 40/50 prompts done
+2026-04-27 23:39:03,513 [INFO] runner:   I_humaneval_tb60_t0.0: 50/50 prompts done
+2026-04-27 23:39:03,554 [INFO] runner: EAGLE-3 config I_humaneval_tb60_t0.0 complete. Mean TPS: 6.8
+2026-04-27 23:39:03,555 [INFO] runner: EAGLE-3 Pair I progress: 13/24 (speedup=0.78x)
+2026-04-27 23:39:03,555 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb60_t0.0
+2026-04-27 23:39:03,555 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-27 23:39:03,582 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:39:03,586 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:39:03,604 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:39:03,634 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:39:03,713 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:39:03,766 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-27 23:39:03,790 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:39:03,844 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-27 23:39:03,857 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-27 23:40:20,051 [INFO] runner:   I_triviaqa_tb60_t0.0: 10/50 prompts done
+2026-04-27 23:41:23,688 [INFO] runner:   I_triviaqa_tb60_t0.0: 20/50 prompts done
+2026-04-27 23:42:24,086 [INFO] runner:   I_triviaqa_tb60_t0.0: 30/50 prompts done
+2026-04-27 23:43:45,311 [INFO] runner:   I_triviaqa_tb60_t0.0: 40/50 prompts done
+2026-04-27 23:44:47,746 [INFO] runner:   I_triviaqa_tb60_t0.0: 50/50 prompts done
+2026-04-27 23:44:47,761 [INFO] runner: EAGLE-3 config I_triviaqa_tb60_t0.0 complete. Mean TPS: 20.4
+2026-04-27 23:44:47,761 [INFO] runner: EAGLE-3 Pair I progress: 14/24 (speedup=2.31x)
+2026-04-27 23:44:47,761 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb60_t0.0
+2026-04-27 23:44:47,761 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-27 23:44:47,794 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:44:47,799 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:44:47,839 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:47,881 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:47,909 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:47,946 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-27 23:44:47,967 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:47,983 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-27 23:44:48,090 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-27 23:44:48,796 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb60_t0.0 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1031) must match the existing size (1030) at non-singleton dimension 3.  Target sizes: [1, 16, 7, 1031].  Tensor sizes: [1, 1, 7, 1030]
+2026-04-27 23:44:48,797 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb60_t0.0
+2026-04-27 23:44:48,797 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-27 23:44:48,819 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:44:48,824 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:44:48,843 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:48,855 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:48,879 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:48,909 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-27 23:44:48,929 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:44:48,945 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-27 23:44:48,962 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-27 23:47:42,977 [INFO] runner:   I_writingprompts_tb60_t0.0: 10/50 prompts done
+2026-04-27 23:50:44,120 [INFO] runner:   I_writingprompts_tb60_t0.0: 20/50 prompts done
+2026-04-27 23:53:23,276 [INFO] runner:   I_writingprompts_tb60_t0.0: 30/50 prompts done
+2026-04-27 23:56:28,755 [INFO] runner:   I_writingprompts_tb60_t0.0: 40/50 prompts done
+2026-04-27 23:59:11,773 [INFO] runner:   I_writingprompts_tb60_t0.0: 50/50 prompts done
+2026-04-27 23:59:11,807 [INFO] runner: EAGLE-3 config I_writingprompts_tb60_t0.0 complete. Mean TPS: 7.8
+2026-04-27 23:59:11,807 [INFO] runner: EAGLE-3 Pair I progress: 16/24 (speedup=0.95x)
+2026-04-27 23:59:11,807 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb60_t0.6
+2026-04-27 23:59:11,807 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-27 23:59:11,836 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 23:59:11,841 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-27 23:59:11,860 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:59:11,903 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-27 23:59:11,923 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-27 23:59:12,166 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-27 23:59:12,186 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-27 23:59:12,196 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-27 23:59:12,219 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-28 00:02:44,198 [INFO] runner:   I_humaneval_tb60_t0.6: 10/50 prompts done
+2026-04-28 00:05:57,853 [INFO] runner:   I_humaneval_tb60_t0.6: 20/50 prompts done
+2026-04-28 00:09:14,955 [INFO] runner:   I_humaneval_tb60_t0.6: 30/50 prompts done
+2026-04-28 00:12:26,981 [INFO] runner:   I_humaneval_tb60_t0.6: 40/50 prompts done
+2026-04-28 00:15:40,067 [INFO] runner:   I_humaneval_tb60_t0.6: 50/50 prompts done
+2026-04-28 00:15:40,106 [INFO] runner: EAGLE-3 config I_humaneval_tb60_t0.6 complete. Mean TPS: 6.6
+2026-04-28 00:15:40,107 [INFO] runner: EAGLE-3 Pair I progress: 17/24 (speedup=0.78x)
+2026-04-28 00:15:40,107 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb60_t0.6
+2026-04-28 00:15:40,107 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-28 00:15:40,144 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 00:15:40,148 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-28 00:15:40,169 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:15:40,200 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:15:40,277 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 00:15:40,322 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-28 00:15:40,344 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 00:15:40,395 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-28 00:15:40,408 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-28 00:17:44,315 [INFO] runner:   I_triviaqa_tb60_t0.6: 10/50 prompts done
+2026-04-28 00:19:44,773 [INFO] runner:   I_triviaqa_tb60_t0.6: 20/50 prompts done
+2026-04-28 00:21:40,835 [INFO] runner:   I_triviaqa_tb60_t0.6: 30/50 prompts done
+2026-04-28 00:23:35,385 [INFO] runner:   I_triviaqa_tb60_t0.6: 40/50 prompts done
+2026-04-28 00:25:27,431 [INFO] runner:   I_triviaqa_tb60_t0.6: 50/50 prompts done
+2026-04-28 00:25:27,454 [INFO] runner: EAGLE-3 config I_triviaqa_tb60_t0.6 complete. Mean TPS: 11.3
+2026-04-28 00:25:27,455 [INFO] runner: EAGLE-3 Pair I progress: 18/24 (speedup=1.33x)
+2026-04-28 00:25:27,455 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb60_t0.6
+2026-04-28 00:25:27,455 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-28 00:25:27,513 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 00:25:27,518 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-28 00:25:27,560 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:27,613 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:27,676 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:27,722 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-28 00:25:27,757 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:27,774 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-28 00:25:27,881 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-28 00:25:28,590 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb60_t0.6 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1027) must match the existing size (1026) at non-singleton dimension 3.  Target sizes: [1, 16, 3, 1027].  Tensor sizes: [1, 1, 3, 1026]
+2026-04-28 00:25:28,592 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb60_t0.6
+2026-04-28 00:25:28,592 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-28 00:25:28,617 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 00:25:28,622 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-28 00:25:28,644 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:28,652 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:28,676 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:28,708 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-28 00:25:28,732 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 00:25:28,748 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-28 00:25:28,766 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-28 00:28:52,312 [INFO] runner:   I_writingprompts_tb60_t0.6: 10/50 prompts done
+2026-04-28 00:32:04,013 [INFO] runner:   I_writingprompts_tb60_t0.6: 20/50 prompts done
+2026-04-28 00:35:17,104 [INFO] runner:   I_writingprompts_tb60_t0.6: 30/50 prompts done
+2026-04-28 00:38:31,428 [INFO] runner:   I_writingprompts_tb60_t0.6: 40/50 prompts done
+2026-04-28 00:41:46,384 [INFO] runner:   I_writingprompts_tb60_t0.6: 50/50 prompts done
+2026-04-28 00:41:46,421 [INFO] runner: EAGLE-3 config I_writingprompts_tb60_t0.6 complete. Mean TPS: 6.7
+2026-04-28 00:41:46,422 [INFO] runner: EAGLE-3 Pair I progress: 20/24 (speedup=0.79x)
+2026-04-28 00:41:46,422 [INFO] runner: Running EAGLE-3 config: I_humaneval_tb60_t1.0
+2026-04-28 00:41:46,422 [INFO] data: Loading dataset for task 'humaneval' ...
+2026-04-28 00:41:46,456 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 00:41:46,460 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/openai/openai_humaneval/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/README.md "HTTP/1.1 200 OK"
+2026-04-28 00:41:46,479 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:41:46,514 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/openai/openai_humaneval/openai/openai_humaneval.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:41:46,540 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 00:41:46,582 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=openai/openai_humaneval "HTTP/1.1 200 OK"
+2026-04-28 00:41:46,653 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/openai/openai_humaneval/resolve/7dce6050a7d6d172f3cc5c32aa97f52fa1a2e544/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 00:41:46,663 [INFO] data: Loaded 50 prompts for task 'humaneval'
+2026-04-28 00:41:46,686 [INFO] data: Tokenized 50 prompts for 'humaneval' (max_tokens=512)
+2026-04-28 00:45:08,633 [INFO] runner:   I_humaneval_tb60_t1.0: 10/50 prompts done
+2026-04-28 00:48:17,683 [INFO] runner:   I_humaneval_tb60_t1.0: 20/50 prompts done
+2026-04-28 00:51:28,173 [INFO] runner:   I_humaneval_tb60_t1.0: 30/50 prompts done
+2026-04-28 00:54:34,046 [INFO] runner:   I_humaneval_tb60_t1.0: 40/50 prompts done
+2026-04-28 00:57:41,231 [INFO] runner:   I_humaneval_tb60_t1.0: 50/50 prompts done
+2026-04-28 00:57:41,267 [INFO] runner: EAGLE-3 config I_humaneval_tb60_t1.0 complete. Mean TPS: 6.8
+2026-04-28 00:57:41,268 [INFO] runner: EAGLE-3 Pair I progress: 21/24 (speedup=0.80x)
+2026-04-28 00:57:41,268 [INFO] runner: Running EAGLE-3 config: I_triviaqa_tb60_t1.0
+2026-04-28 00:57:41,268 [INFO] data: Loading dataset for task 'triviaqa' ...
+2026-04-28 00:57:41,295 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 00:57:41,299 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/mandarjoshi/trivia_qa/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/README.md "HTTP/1.1 200 OK"
+2026-04-28 00:57:41,319 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:57:41,349 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/mandarjoshi/trivia_qa/mandarjoshi/trivia_qa.py "HTTP/1.1 404 Not Found"
+2026-04-28 00:57:41,424 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 00:57:41,467 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=mandarjoshi/trivia_qa "HTTP/1.1 200 OK"
+2026-04-28 00:57:41,526 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/mandarjoshi/trivia_qa/resolve/0f7faf33a3908546c6fd5b73a660e0f8ff173c2f/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 00:57:41,578 [INFO] data: Loaded 50 prompts for task 'triviaqa'
+2026-04-28 00:57:41,590 [INFO] data: Tokenized 50 prompts for 'triviaqa' (max_tokens=256)
+2026-04-28 01:00:06,295 [INFO] runner:   I_triviaqa_tb60_t1.0: 10/50 prompts done
+2026-04-28 01:02:03,616 [INFO] runner:   I_triviaqa_tb60_t1.0: 20/50 prompts done
+2026-04-28 01:04:13,243 [INFO] runner:   I_triviaqa_tb60_t1.0: 30/50 prompts done
+2026-04-28 01:06:20,340 [INFO] runner:   I_triviaqa_tb60_t1.0: 40/50 prompts done
+2026-04-28 01:08:30,512 [INFO] runner:   I_triviaqa_tb60_t1.0: 50/50 prompts done
+2026-04-28 01:08:30,538 [INFO] runner: EAGLE-3 config I_triviaqa_tb60_t1.0 complete. Mean TPS: 9.9
+2026-04-28 01:08:30,538 [INFO] runner: EAGLE-3 Pair I progress: 22/24 (speedup=1.15x)
+2026-04-28 01:08:30,538 [INFO] runner: Running EAGLE-3 config: I_cnn_dailymail_tb60_t1.0
+2026-04-28 01:08:30,538 [INFO] data: Loading dataset for task 'cnn_dailymail' ...
+2026-04-28 01:08:30,568 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 01:08:30,573 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/abisee/cnn_dailymail/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/README.md "HTTP/1.1 200 OK"
+2026-04-28 01:08:30,593 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:30,626 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/abisee/cnn_dailymail/abisee/cnn_dailymail.py "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:30,649 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:30,690 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=abisee/cnn_dailymail "HTTP/1.1 200 OK"
+2026-04-28 01:08:30,715 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/abisee/cnn_dailymail/resolve/96df5e686bee6baa90b8bee7c28b81fa3fa6223d/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:30,732 [INFO] data: Loaded 50 prompts for task 'cnn_dailymail'
+2026-04-28 01:08:30,839 [INFO] data: Tokenized 50 prompts for 'cnn_dailymail' (max_tokens=1024)
+2026-04-28 01:08:31,549 [ERROR] runner: FAILED EAGLE-3 config I_cnn_dailymail_tb60_t1.0 — skipping to next
+Traceback (most recent call last):
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 546, in run_eagle3_pair_sweep
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/runner.py", line 427, in run_single_eagle3_config
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/Code/eagle3-gemma4-31B/eagle3.py", line 1110, in eagle3_decode
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 1034, in forward
+    outputs = self.model(
+              ^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 876, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 927, in forward
+    outputs = self.language_model(
+              ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/generic.py", line 952, in wrapper
+    output = func(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 248, in wrapper
+    outputs = func(self, *args, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 574, in forward
+    hidden_states = decoder_layer(
+                    ^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/modeling_layers.py", line 93, in __call__
+    return super().__call__(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 417, in forward
+    hidden_states, _ = self.self_attn(
+                       ^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1845, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1793, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/models/gemma3/modeling_gemma3.py", line 374, in forward
+    attn_output, attn_weights = attention_interface(
+                                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/final-project/Final-Project-Group3/venv/lib/python3.12/site-packages/transformers/integrations/sdpa_attention.py", line 92, in sdpa_attention_forward
+    attn_output = torch.nn.functional.scaled_dot_product_attention(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The expanded size of the tensor (1027) must match the existing size (1026) at non-singleton dimension 3.  Target sizes: [1, 16, 3, 1027].  Tensor sizes: [1, 1, 3, 1026]
+2026-04-28 01:08:31,551 [INFO] runner: Running EAGLE-3 config: I_writingprompts_tb60_t1.0
+2026-04-28 01:08:31,551 [INFO] data: Loading dataset for task 'writingprompts' ...
+2026-04-28 01:08:31,573 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-04-28 01:08:31,578 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/api/resolve-cache/datasets/euclaise/writingprompts/35f0aa359452ba8147b34d925684fccee26679cc/README.md "HTTP/1.1 200 OK"
+2026-04-28 01:08:31,597 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:31,610 [INFO] httpx: HTTP Request: HEAD https://s3.amazonaws.com/datasets.huggingface.co/datasets/datasets/euclaise/writingprompts/euclaise/writingprompts.py "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:31,643 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/.huggingface.yaml "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:31,681 [INFO] httpx: HTTP Request: GET https://datasets-server.huggingface.co/info?dataset=euclaise/writingprompts "HTTP/1.1 200 OK"
+2026-04-28 01:08:31,709 [INFO] httpx: HTTP Request: HEAD https://huggingface.co/datasets/euclaise/writingprompts/resolve/35f0aa359452ba8147b34d925684fccee26679cc/dataset_infos.json "HTTP/1.1 404 Not Found"
+2026-04-28 01:08:31,725 [INFO] data: Loaded 50 prompts for task 'writingprompts'
+2026-04-28 01:08:31,743 [INFO] data: Tokenized 50 prompts for 'writingprompts' (max_tokens=256)
+2026-04-28 01:11:51,103 [INFO] runner:   I_writingprompts_tb60_t1.0: 10/50 prompts done
+2026-04-28 01:14:54,320 [INFO] runner:   I_writingprompts_tb60_t1.0: 20/50 prompts done
+2026-04-28 01:17:58,950 [INFO] runner:   I_writingprompts_tb60_t1.0: 30/50 prompts done
+2026-04-28 01:21:04,232 [INFO] runner:   I_writingprompts_tb60_t1.0: 40/50 prompts done
+2026-04-28 01:24:16,474 [INFO] runner:   I_writingprompts_tb60_t1.0: 50/50 prompts done
+2026-04-28 01:24:16,512 [INFO] runner: EAGLE-3 config I_writingprompts_tb60_t1.0 complete. Mean TPS: 6.9
+2026-04-28 01:24:16,514 [INFO] runner: EAGLE-3 Pair I progress: 24/24 (speedup=0.79x)
+2026-04-28 01:24:16,785 [INFO] models: Models unloaded. VRAM freed.
+2026-04-28 01:24:16,874 [INFO] __main__: All experiments complete. Results in: results/eagle3_gemma3_full
