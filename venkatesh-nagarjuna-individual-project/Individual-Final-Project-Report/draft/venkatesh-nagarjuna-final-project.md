@@ -72,17 +72,19 @@ where later steps train the draft head to recover from its own predictions. That
 
 Figure 1 provides the public high-level EAGLE architecture context that informed the final implementation work.
 
-![Figure 1. Official EAGLE concept diagram showing the original LLM, feature extrapolation path, and multi-step verification design. Source: SafeAILab EAGLE repository, `figs/fig1.png`.](../../Final-Group-Project-Report/assets/eagle_fig1.png)
+![Figure 1. Official EAGLE concept diagram showing the original LLM, feature extrapolation path, and multi-step verification design. Source: SafeAILab EAGLE repository, `figs/fig1.png`.](./assets/eagle_fig1.png)
 
-Figure 1 is not the exact final code path in the repository, but it captures the core idea behind the work I extended: replacing a second full draft model with a lighter predictive mechanism built from target-model internal features.
+
+
+This captures the core idea behind the work I extended: replacing a second full draft model with a lighter predictive mechanism built from target-model internal features.
 
 ### 2.3 Progression of the Work I Led
 
 My work followed a clear experimental progression.
 
-#### Stage 1: Qwen-based experiments
+#### Stage 1: Qwen3-based experiments
 
-The project initially explored Qwen-based draft models and Qwen-target EAGLE training. The active repository no longer carries the full Qwen numerical artifacts, because they were moved into `Code/eagle3-gemma3-12B/archive/qwen_legacy/` as local-only legacy content. However, the archived README confirms that Qwen benchmarks, logs, and checkpoints were part of the earlier experimentation path.
+The project initially explored Qwen3-based draft models and Qwen3-target EAGLE training. The active repository no longer carries the full Qwen3 numerical artifacts, because they were moved into `Code/eagle3-gemma3-12B/archive/qwen_legacy/` as local-only legacy content. However, the archived README confirms that Qwen3 benchmarks, logs, and checkpoints were part of the earlier experimentation path.
 
 This stage was important because it established the first working versions of:
 
@@ -119,28 +121,7 @@ This progression mattered because the final Gemma-3-12B path was not the first i
 
 The part of the work I contributed in the greatest depth was the project pipeline itself. On the standard speculative side, my role was to help shape the process architecture: how data is loaded, how runs are structured, how model pairs are defined, how outputs are written, and how comparisons are made fairly against baseline. On the EAGLE side, my contribution extended beyond process design into direct experimentation, implementation iteration, training, debugging, and evaluation.
 
-The final EAGLE module contains scripts for every stage of the workflow:
-
-| Script | Lines |
-| --- | ---: |
-| `eagle3.py` | 1,281 |
-| `eagle3_train.py` | 869 |
-| `test_correctness.py` | 618 |
-| `runner.py` | 606 |
-| `speculative.py` | 511 |
-| `app.py` | 403 |
-| `visualize.py` | 399 |
-| `sampling.py` | 270 |
-| `config.py` | 245 |
-| `sweep.py` | 242 |
-| `safetensors_nommap.py` | 238 |
-| `metrics.py` | 224 |
-| `models.py` | 214 |
-| `data.py` | 176 |
-| `baseline.py` | 119 |
-| **Total** | **6,415** |
-
-The pipeline functionality I contributed includes:
+The final EAGLE module the pipeline functionality I contributed which includes:
 
 1. dataset loading and prompt formatting,
 2. model loading with quantization,
@@ -199,10 +180,6 @@ The completed training run produced:
 
 `Code/eagle3-gemma3-12B/checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt`
 
-and the log shows completion at:
-
-1. `2026-04-27 18:13:37`
-
 This is a strong concrete artifact of my contribution because it shows the work progressed from experimental setup into a completed trained model.
 
 ### 3.5 Inference Debugging and Recovery Work
@@ -217,32 +194,7 @@ This patch does not make `cnn_dailymail` fast, but it allows the failed cells to
 
 ## 4. Results
 
-### 4.1 Standard Speculative Decoding Results as Shared Context
-
-The strongest fully completed benchmark results from the project come from pair `F`. These results are relevant to my report as shared project context because I helped architect the high-level standard speculative process flow and participated in selecting the final target-draft setup. However, the actual completed pair `F` evaluation runs were carried out by my teammate.
-
-| Task | Best `gamma` | Best `temperature` | Mean TPS | Speedup | Mean Acceptance Rate | Mean Acceptance Length |
-| --- | --- | --- | --- | --- | --- | --- |
-| `humaneval` | 10 | 0.0 | 14.22 | 1.476 | 0.9279 | 6.03 |
-| `triviaqa` | 5 | 0.0 | 12.47 | 1.295 | 0.8751 | 2.96 |
-| `cnn_dailymail` | 1 | 0.0 | 8.30 | 0.889 | 0.5342 | 0.53 |
-| `writingprompts` | 1 | 0.0 | 8.43 | 0.871 | 0.4525 | 0.45 |
-
-Figure 2 shows how speedup changes with `gamma` in the saved Gemma speculative-decoding results.
-
-![Figure 2. Speedup versus gamma from the saved pair `F` and legacy Gemma comparison results. Source: local project artifact `Code/gemma-draft-pair/figures/FG_final/speedup_vs_gamma.png`.](../../Code/gemma-draft-pair/figures/FG_final/speedup_vs_gamma.png)
-
-Figure 2 shows why pair selection mattered. Larger `gamma` values help only when the draft model remains well aligned with the target model. The pair `F` configuration that the team converged on was able to capitalize on that behavior for `humaneval` and `triviaqa`.
-
-Figure 3 shows the acceptance-rate pattern that explains the speedup pattern.
-
-![Figure 3. Acceptance-rate heatmap from the saved Gemma speculative-decoding results. Source: local project artifact `Code/gemma-draft-pair/figures/FG_final/acceptance_heatmap.png`.](../../Code/gemma-draft-pair/figures/FG_final/acceptance_heatmap.png)
-
-Figure 3 shows that `humaneval` and `triviaqa` have much stronger target-draft agreement than `cnn_dailymail` and `writingprompts`. This is the main reason pair `F` succeeds on some tasks and not on others.
-
-The most important conclusion from these pair `F` results is that model-pair choice is not a cosmetic decision. It directly controls whether speculative decoding produces a real systems gain. In my own contribution, this result mainly validates the process architecture and pair-selection logic rather than a benchmark run that I personally executed.
-
-### 4.2 EAGLE-3 Training Results
+### 4.1 EAGLE-3 Training Results
 
 The final EAGLE-3 training run is one of the main results tied directly to my contribution.
 
@@ -270,7 +222,9 @@ Selected loss milestones are:
 
 Figure 4 plots the training loss from the completed run.
 
-![Figure 4. EAGLE-3 training loss for the Gemma-3-12B draft-head run, plotted from `training.log`. Source: generated from the saved project log.](../../Final-Group-Project-Report/assets/eagle3_training_loss.png)
+<img src="./assets/eagle3_training_loss.png" alt="Figure 4. EAGLE-3 training loss for the Gemma-3-12B draft-head run, plotted from `training.log`. Source: generated from the saved project log." style="zoom: 50%;" />
+
+
 
 Figure 4 shows a strong monotonic improvement trend. The loss falls sharply early in training and then converges into a much more stable low-loss regime. This is strong evidence that the final Gemma-3 EAGLE path was not only implemented, but trained successfully.
 
@@ -303,14 +257,14 @@ This is an important experimental lesson. The training run succeeded, but practi
 
 Taken together, the results support the progression I drove across the EAGLE side of the project.
 
-1. Early Qwen and intermediate Gemma-4 experimentation were valuable for exploration, but they were not the final practical destination.
+1. Early Qwen3 and intermediate Gemma-4 experimentation were valuable for exploration, but they were not the final practical destination.
 2. The Gemma-3 pair `F` became the strongest completed standard speculative benchmark.
 3. The final Gemma-3 EAGLE-3 variant became the most practical learned-speculation path.
 4. The project's strongest numerical EAGLE gains so far are on `triviaqa`, while long-context summarization remains the hardest case.
 
 ## 5. Summary and Conclusions
 
-My main contribution to this project was building and evolving the full experimentation pipeline rather than contributing to only one isolated benchmark. On the standard speculative side, I helped architect the high-level process flow and contributed to model-pair selection. On the EAGLE side, I directly drove the experimentation process from Qwen to Gemma-4-31B and finally to the trained Gemma-3 EAGLE-3 system.
+My main contribution to this project was building and evolving the full experimentation pipeline rather than contributing to only one isolated benchmark. On the standard speculative side, I helped architect the high-level process flow and contributed to model-pair selection. On the EAGLE side, I directly drove the experimentation process from Qwen3 to Gemma-4-31B and finally to the trained Gemma-3 EAGLE-3 system.
 
 The most important things I learned are:
 
@@ -330,42 +284,43 @@ Future improvements should focus on:
 
 ## 6. Code Contribution Percentage
 
-The course guideline asks for the percentage of code that was found or copied from the internet. For this report, I am using the contribution-accounting convention I specified for this project: because the codebase was produced through AI-assisted generation, I assign my direct contribution credit as `50%` of the active EAGLE module script base.
+For this report, I am using the contribution-accounting convention specified for this project: because the codebase was produced through AI-assisted generation, I assign my direct contribution credit as `30%` of the active EAGLE module script base.
 
-Measured script total for `Code/eagle3-gemma3-12B/*.py`:
+Measured script total under`Code/eagle3-gemma3-12B/`:
 
 \[
-\text{Total active EAGLE script lines} = 6415
+\text{Total active script lines} = 6415
 \]
 
 Assigned individual contribution:
 
 \[
-\text{My contribution} = 0.5 \times 6415 \approx 3208 \text{ lines}
+\text{My contribution} = 0.3 \times 6415 \approx 1925 \text{ lines}
 \]
 
-Assigned external or AI-generated portion:
+Assigned AI-generated portion:
 
 \[
-\text{External portion} = 6415 - 3208 = 3207 \text{ lines}
+\text{External portion} = 6415 - 1925 = 4490 \text{ lines}
 \]
 
 Therefore, using this requested accounting convention:
 
 \[
-\frac{3207}{6415} \times 100 \approx 50.0\%
+\frac{3207}{6415} \times 100 \approx 30.0\%
 \]
 
-So the reported percentage of externally generated or internet-assisted code is:
+So the reported percentage of externally generated code is:
 
-**50.0%**
+\[
+\approx 70\%
+\]
 
 This percentage is a declared attribution rule for this report, not a line-by-line forensic reconstruction from version history.
 
 ## 7. References
 
 1. Leviathan, Y., Kalman, M., and Matias, Y. Fast Inference from Transformers via Speculative Decoding. ICML 2023. https://arxiv.org/abs/2302.01318
-2. Li, Y., Wei, F., Zhang, C., and Zhang, H. EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty. ICML 2024. https://arxiv.org/abs/2401.15077
 3. SafeAILab EAGLE repository. https://github.com/SafeAILab/EAGLE
 4. Gemma Team. Gemma 3 Technical Report. Google DeepMind, 2025. https://storage.googleapis.com/deepmind-media/gemma/Gemma3Report.pdf
 5. Hugging Face model card: `google/gemma-3-1b-it`. https://huggingface.co/google/gemma-3-1b-it
@@ -375,7 +330,3 @@ This percentage is a declared attribution rule for this report, not a line-by-li
 9. Hugging Face dataset: `abisee/cnn_dailymail`. https://huggingface.co/datasets/abisee/cnn_dailymail
 10. Hugging Face dataset: `euclaise/writingprompts`. https://huggingface.co/datasets/euclaise/writingprompts
 11. Hugging Face dataset: `vicgalle/alpaca-gpt4`. https://huggingface.co/datasets/vicgalle/alpaca-gpt4
-12. Local project artifact: `Code/gemma-draft-pair/gemma_runs/outputs/F_final/summary.csv`
-13. Local project artifact: `Code/eagle3-gemma3-12B/training.log`
-14. Local project artifact: `Code/eagle3-gemma3-12B/results/eagle3_gemma3_full/summary.csv`
-15. Local project artifact: `Code/eagle3-gemma3-12B/archive/qwen_legacy/README.md`
