@@ -1,6 +1,15 @@
 ## EAGLE-3 Gemma-3-12B Module
 
-This module contains the active EAGLE-3 implementation for the project.
+This module contains the active EAGLE-3 implementation for the project, including the working comparison app, the finished training/evaluation artifacts, and the cleaned runtime code.
+
+Layout overview:
+
+1. `core/` - reusable implementation modules
+2. `scripts/` - CLI entrypoints
+3. `apps/` - Streamlit UI
+4. `docs/` - module-by-module written references
+5. `artifacts/` - logs, results, and figures
+6. `archive/` - legacy material kept for reference
 
 Active EAGLE pair:
 
@@ -35,13 +44,15 @@ Gemma downloads may require Hugging Face access approval and authentication.
 
 ## Final Checkpoint
 
-The completed training run produced:
+The completed training run wrote the final checkpoint locally at:
 
 ```text
 checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt
 ```
 
-Set the checkpoint path before running evaluation:
+The raw proof for that run is preserved in `artifacts/logs/training.log`. The checkpoint binary itself is not included in this folder snapshot.
+
+Set the checkpoint path before running evaluation if you have the local checkpoint available:
 
 ```bash
 export EAGLE3_GEMMA3_CHECKPOINT="$PWD/checkpoints/eagle3/gemma3_12b/eagle3_gemma3_12b_final.pt"
@@ -51,42 +62,42 @@ export EAGLE3_GEMMA3_CHECKPOINT="$PWD/checkpoints/eagle3/gemma3_12b/eagle3_gemma
 
 ```bash
 # Unit tests
-python3 test_correctness.py --level 1
+python3 scripts/test_correctness.py --level 1
 
 # EAGLE-3 unit tests
-python3 test_correctness.py --level 4
+python3 scripts/test_correctness.py --level 4
 
 # EAGLE-3 smoke test on the active Gemma-3 pair
-python3 test_correctness.py --level 6 --pair I
+python3 scripts/test_correctness.py --level 6 --pair I
 
 # Preview the EAGLE-3 evaluation grid
-python3 sweep.py --dry-run --eagle3 --eagle3-only --eagle3-pairs I
+python3 scripts/sweep.py --dry-run --eagle3 --eagle3-only --eagle3-pairs I
 ```
 
 ## Run EAGLE-3 Benchmarks
 
 ```bash
-python3 sweep.py \
+python3 scripts/sweep.py \
   --eagle3 --eagle3-only --eagle3-pairs I \
   --tree-budgets 20 60 \
   --temps 0.0 0.6 1.0 \
   --tasks humaneval triviaqa cnn_dailymail writingprompts \
   --num-prompts 50 \
   --max-tokens 128 \
-  --output-dir results/eagle3_gemma3_full
+  --output-dir artifacts/results/eagle3_gemma3_full
 ```
 
 ## Optional Smaller Calibration Run
 
 ```bash
-python3 sweep.py \
+python3 scripts/sweep.py \
   --eagle3 --eagle3-only --eagle3-pairs I \
   --tree-budgets 20 \
   --temps 0.0 \
   --tasks humaneval triviaqa \
   --num-prompts 10 \
   --max-tokens 128 \
-  --output-dir results/eagle3_gemma3_calibration
+  --output-dir artifacts/results/eagle3_gemma3_calibration
 ```
 
 ## Unified Chat Comparison App
@@ -104,7 +115,7 @@ The right-hand chat can switch between:
 Run it with:
 
 ```bash
-streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+streamlit run apps/app.py --server.port 8501 --server.address 0.0.0.0
 ```
 
 The app keeps models warm in memory with `st.cache_resource` and stores downloaded Hugging Face artifacts under a local `.hf-cache/` directory so they do not need to be fetched again on every restart.
@@ -118,7 +129,7 @@ Deployment note:
 ## Outputs
 
 ```text
-results/<run_name>/
+artifacts/results/<run_name>/
   baseline/
   eagle3/
   summary.csv
@@ -133,4 +144,10 @@ checkpoints/
 
 1. Historical or archived artifacts may still be present in this folder.
 2. Use the repository root `README.md` for the two-module project overview.
-3. `training.log` is the source-of-truth record for the completed training run.
+3. `artifacts/logs/training.log` is the source-of-truth record for the completed training run.
+
+Raw proof logs included in this folder:
+
+1. `artifacts/logs/training.log`
+2. `artifacts/logs/eval_eagle3_gemma3_full.log`
+3. `archive/logs/cnn_rerun_fix.log`

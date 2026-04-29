@@ -1,0 +1,6 @@
+!artifacts/logs/training.log
+!artifacts/logs/eval_eagle3_gemma3_full.log
+!archive/logs/cnn_rerun_fix.log
+!requirements.txt
+!docs/
+!docs/**

@@ -6,7 +6,7 @@ This module benchmarks standard speculative decoding for the active project pair
 2. Target: `google/gemma-3-12b-it`
 3. Draft: `google/gemma-3-1b-it`
 
-The main entrypoint is `sweep.py`.
+The main entrypoint is `scripts/sweep.py`.
 
 ## Setup
 
@@ -27,15 +27,15 @@ cd Code/gemma-draft-pair
 ## Quick Validation
 
 ```bash
-python3 test_correctness.py --level 1
-python3 test_correctness.py --level 3 --pair F
-python3 sweep.py --dry-run --pairs F
+python3 scripts/test_correctness.py --level 1
+python3 scripts/test_correctness.py --level 3 --pair F
+python3 scripts/sweep.py --dry-run --pairs F
 ```
 
 ## Full Evaluation Run
 
 ```bash
-python3 sweep.py --pairs F --output-dir gemma_runs/outputs/F_rerun
+python3 scripts/sweep.py --pairs F --output-dir artifacts/results/F_rerun
 ```
 
 ## Full Project Grid For Pair F
@@ -51,20 +51,26 @@ The saved final pair `F` results were produced across:
 Equivalent command:
 
 ```bash
-python3 sweep.py \
+python3 scripts/sweep.py \
   --pairs F \
   --gammas 1 3 5 7 10 \
   --temps 0.0 0.6 1.0 \
   --tasks humaneval triviaqa cnn_dailymail writingprompts \
   --num-prompts 50 \
   --max-tokens 128 \
-  --output-dir gemma_runs/outputs/F_full
+  --output-dir artifacts/results/F_full
+```
+
+## Streamlit Demo
+
+```bash
+streamlit run apps/app.py --server.port 8501 --server.address 0.0.0.0
 ```
 
 ## Outputs
 
 ```text
-gemma_runs/outputs/<run_name>/
+artifacts/results/<run_name>/
   baseline/
   speculative/
   summary.csv
@@ -72,10 +78,13 @@ gemma_runs/outputs/<run_name>/
 
 Saved project artifacts:
 
-1. `gemma_runs/outputs/F_final/summary.csv`
-2. `figures/FG_final/`
+1. `artifacts/results/F_final/summary.csv`
+2. `artifacts/results/G_final/summary.csv`
+3. `artifacts/figures/final/`
 
 ## Notes
 
-1. Some historical comparison artifacts for pair `G` are still present in this folder, but pair `F` is the active project scope.
-2. Use the repository root `README.md` for the full two-module project overview.
+1. Pair `F` is the active project scope used in the final report.
+2. Smoke runs and older residual artifacts were moved into `archive/`.
+3. Pair `G` remains supported in the codebase as a larger comparison path.
+4. Use the repository root `README.md` for the full two-module project overview.

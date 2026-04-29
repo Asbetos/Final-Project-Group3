@@ -1,0 +1,970 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\section{Group Final Report}\label{group-final-report}
+
+\subsection{Accelerating Gemma-3-12B Inference with Standard Speculative
+Decoding and
+EAGLE-3}\label{accelerating-gemma-3-12b-inference-with-standard-speculative-decoding-and-eagle-3}
+
+\subsection{1. Introduction}\label{1-introduction}
+
+Large language models are increasingly limited not by model quality but
+by inference cost. Even when a target model fits comfortably on a modern
+GPU, autoregressive decoding remains sequential, so throughput and
+latency can become the bottleneck for interactive use and large-scale
+evaluation. This project studies two complementary acceleration
+strategies for the same target model, \texttt{google/gemma-3-12b-it}:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  a standard speculative-decoding module implemented in
+  \texttt{Code/gemma-draft-pair/}, using a smaller draft model to
+  propose tokens for target-model verification;
+\item
+  an EAGLE-3 module implemented in
+  \texttt{venkatesh-nagarjuna-individual-project/Code/}, using a learned
+  draft head over target hidden states instead of a second full language
+  model.
+\end{enumerate}
+
+The purpose of the project is not to change the target model itself, but
+to improve inference efficiency while preserving practical reliability.
+The standard speculative-decoding module evaluates the classical
+two-model draft-and-verify design introduced by Leviathan et al. (2023).
+The EAGLE-3 module evaluates a more compact alternative inspired by Li
+et al. (2024), where future-token proposals are produced from internal
+target-model features rather than from a separate draft model.
+
+This report is intentionally restricted to experiments that were
+actually completed and saved in the repository. In particular:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  the fully finished standard speculative-decoding benchmark set is the
+  pair \texttt{F} Gemma-3 run in
+  \texttt{Code/gemma-draft-pair/gemma\_runs/outputs/F\_final/summary.csv};
+\item
+  the fully finished EAGLE-3 training and inference artifacts are stored
+  under \texttt{venkatesh-nagarjuna-individual-project/Code/artifacts/}.
+\end{enumerate}
+
+The rest of the report follows the course guidelines closely. Section 2
+describes the datasets. Section 3 explains the models and algorithms.
+Section 4 describes the experimental setup and evaluation criteria.
+Section 5 discusses searched hyperparameters, overfitting control, and
+extrapolation control. Section 6 presents the main results with figures
+and tables. Section 7 summarizes the conclusions and practical lessons.
+Section 8 lists papers, websites, and repositories used for background
+information or implementation support.
+
+\subsection{2. Description of the Data
+Set}\label{2-description-of-the-data-set}
+
+\subsubsection{2.1 Evaluation Datasets}\label{21-evaluation-datasets}
+
+Both acceleration modules were evaluated on the same four benchmark
+prompt collections. Each configuration used \texttt{50} prompts sampled
+with seed \texttt{42}.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+Task & Hugging Face dataset & Split & Prompt field & Purpose & Max
+prompt tokens \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{humaneval} & \texttt{openai/openai\_humaneval} & \texttt{test} &
+\texttt{prompt} & Code completion & 512 \\
+\texttt{triviaqa} & \texttt{mandarjoshi/trivia\_qa} (\texttt{rc}) &
+\texttt{validation} & \texttt{question} & Short-form question answering
+& 256 \\
+\texttt{cnn\_dailymail} & \texttt{abisee/cnn\_dailymail}
+(\texttt{3.0.0}) & \texttt{test} & \texttt{article} & Summarization &
+1024 \\
+\texttt{writingprompts} & \texttt{euclaise/writingprompts} &
+\texttt{validation} & \texttt{prompt} & Creative writing continuation &
+256 \\
+\end{longtable}
+}
+
+The prompt-processing pipeline applies the tokenizer\textquotesingle s
+chat template when one is available and falls back to a simple
+\texttt{System\ /\ User\ /\ Assistant} text format otherwise. This kept
+evaluation consistent across model families and reduced
+prompt-formatting differences as a confound.
+
+These four tasks were intentionally heterogeneous. \texttt{humaneval}
+rewards deterministic, syntax-sensitive continuation; \texttt{triviaqa}
+focuses on short-answer generation; \texttt{cnn\_dailymail} stresses
+long-context summarization; and \texttt{writingprompts} tests
+longer-form open-ended generation. This mix is useful because
+acceleration quality depends strongly on how predictable the next-token
+distribution is for a given task.
+
+\subsubsection{2.2 EAGLE-3 Training
+Dataset}\label{22-eagle-3-training-dataset}
+
+The EAGLE-3 draft head was trained on \texttt{vicgalle/alpaca-gpt4}.
+Each example was converted into an instruction-following chat sequence
+with a fixed system prompt, a user message formed from the instruction
+and optional input, and the reference assistant output.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Dataset & Split & Fields used & Max sequence length & Observed training
+size \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{vicgalle/alpaca-gpt4} & \texttt{train} & \texttt{instruction},
+\texttt{input}, \texttt{output} & 512 & 52,002 examples \\
+\end{longtable}
+}
+
+The completed training log confirms that \texttt{52,002} examples were
+prepared. Importantly, the EAGLE-3 training data is distinct from the
+four held-out evaluation tasks above, so the final benchmark results are
+not simple memorization of the supervised training set.
+
+\subsection{3. Description of the NLP Model and
+Algorithm}\label{3-description-of-the-nlp-model-and-algorithm}
+
+\subsubsection{3.1 Target Model}\label{31-target-model}
+
+Both modules use \texttt{google/gemma-3-12b-it} as the target model. In
+both cases, the target model remains the generator whose behavior we
+ultimately care about. The acceleration logic changes how candidate
+tokens are proposed and verified, but the target model remains
+responsible for the final sequence.
+
+The project uses 4-bit target loading for practical GPU memory reasons.
+This choice does not change the task definitions or the decoding
+algorithms, but it makes the Gemma-3-12B target usable on an AWS
+\texttt{g5.2xlarge} instance with an NVIDIA A10G GPU.
+
+The broader codebase also contains a Gemma-4-31B comparison path, even
+though the fully completed benchmark results in this report are centered
+on Gemma-3-12B. The two targets are therefore relevant at the
+model-context level even though they do not contribute equally to the
+finished experimental record.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/gemma3_gemma4_architecture_overview.png}}
+
+Figure 1 summarizes the model-family context in which the acceleration
+methods operate. In this project, Gemma-3-12B is the main target used
+for the completed standard speculative-decoding and EAGLE-3 experiments.
+Gemma-4-31B is still relevant because the repository supports it as a
+larger comparison target, but it was not the center of the finished
+benchmark analysis reported here.
+
+\subsubsection{3.2 Standard Speculative
+Decoding}\label{32-standard-speculative-decoding}
+
+Standard speculative decoding uses two distributions:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  the target distribution
+  \texttt{p(x\_t\ \textbackslash{}mid\ x\_\{\textless{}t\})}, produced
+  by the large model;
+\item
+  the draft distribution
+  \texttt{q(x\_t\ \textbackslash{}mid\ x\_\{\textless{}t\})}, produced
+  by the smaller model.
+\end{enumerate}
+
+The draft model proposes \texttt{\textbackslash{}gamma} future tokens,
+and the target model verifies them in a batched pass. A drafted token
+\texttt{x\_t} is accepted with probability:
+
+\[\alpha_t = \min\left(1, \frac{p(x_t \mid x_{<t})}{q(x_t \mid x_{<t})}\right)\]
+
+If a proposal is rejected, the implementation samples from the residual
+distribution:
+
+\[r(x) = \frac{\max(0, p(x) - q(x))}{\sum_{x'} \max(0, p(x') - q(x'))}\]
+
+At \texttt{temperature\ =\ 0.0}, the code uses greedy verification
+instead of stochastic rejection sampling. The main benefit of the method
+is that the target model can verify multiple proposed positions in one
+forward pass. The main risk is that speedup collapses when the draft
+model is poorly aligned with the target and many proposals are rejected.
+
+The completed configuration reported in this project is pair \texttt{F}.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+Pair & Target model & Draft model & Quantization & Estimated VRAM \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{F} & \texttt{google/gemma-3-12b-it} &
+\texttt{google/gemma-3-1b-it} & 4-bit target, BF16 draft & about 8.6
+GB \\
+\end{longtable}
+}
+
+This module required no training. Its algorithmic development came from
+adapting the speculative-decoding literature to Gemma-specific
+engineering constraints such as KV-cache handling, preallocated token
+buffers, 4-bit target loading, and detailed timing and VRAM
+instrumentation.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/speculative_decoding_overview.png}}
+
+Figure 2 illustrates the core intuition behind standard speculative
+decoding: if the draft model is often correct, then several future
+tokens can be proposed cheaply and verified in fewer expensive
+target-model passes. The completed pair \texttt{F} experiments test
+exactly how often that assumption holds for Gemma-3-12B paired with
+Gemma-3-1B.
+
+\subsubsection{3.3 EAGLE-3 Draft-Head
+Acceleration}\label{33-eagle-3-draft-head-acceleration}
+
+EAGLE-3 removes the separate draft model and replaces it with a learned
+draft head operating on the target model\textquotesingle s hidden
+states. In the completed implementation, the draft head uses:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  hidden states from three target layers;
+\item
+  a fusion projection over those three feature streams;
+\item
+  the target embedding layer for the currently verified token;
+\item
+  an input projection that combines token and feature information;
+\item
+  one copied decoder layer;
+\item
+  the frozen target normalization and LM head.
+\end{enumerate}
+
+If the hidden states selected from the low-, mid-, and high-level layers
+are denoted by \texttt{h\_low}, \texttt{h\_mid}, and \texttt{h\_high},
+then the fused representation is
+
+\[h_{\text{fused}} = W_f [h_{\text{low}}; h_{\text{mid}}; h_{\text{high}}]\]
+
+and the decoder-layer input is
+
+\[z_t = W_{\text{in}} [e(x_t); h_{\text{fused}, t}]\]
+
+where \texttt{e(x\_t)} is the embedding of the current token.
+
+The training objective is a multi-step KL-divergence loss:
+
+\[\mathcal{L} = \sum_{k=0}^{K-1} \lambda^k \, KL\left(p^{(k)}_{\text{target}} \parallel p^{(k)}_{\text{draft}}\right)\]
+
+with default multi-step horizon \texttt{K\ =\ 5} and decay
+\texttt{\textbackslash{}lambda\ =\ 0.8}.
+
+This objective is important because EAGLE-3 is not only trying to match
+the target\textquotesingle s next-token distribution at one step. It is
+also trying to remain stable after its own predictions are fed back in
+future steps. In other words, the multi-step loss is explicitly designed
+to reduce compounding error during extrapolation.
+
+The completed production configuration is pair \texttt{I}.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Pair & Target model & Draft component & Quantization \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{I} & \texttt{google/gemma-3-12b-it} & trained EAGLE-3 draft head
+& 4-bit target \\
+\end{longtable}
+}
+
+The decode path used in this repository is a best-path EAGLE-3 variant
+rather than a full masked-tree verification implementation. The code
+samples a root token from the target, expands a draft tree from fused
+hidden features, extracts candidate paths, chooses the best path, and
+verifies that path sequentially with the target model.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle_fig1.png}}
+
+Figure 3 is not a literal diagram of the exact code path in this
+repository. Instead, it provides the high-level conceptual background
+for EAGLE-style acceleration: future-token proposals are generated from
+internal target-model representations rather than from a second full
+language model. The project's EAGLE-3 implementation specializes this
+idea to a Gemma-3-12B target with a learned fused-feature draft head.
+
+\subsection{4. Experimental Setup}\label{4-experimental-setup}
+
+\subsubsection{4.1 Hardware and Software
+Framework}\label{41-hardware-and-software-framework}
+
+The project was implemented in Python using PyTorch and Hugging Face
+Transformers, with Hugging Face Datasets for benchmark loading and
+bitsandbytes for 4-bit target quantization and 8-bit optimizer support.
+Plotting used Matplotlib and Seaborn.
+
+The EAGLE-3 training and evaluation logs explicitly record an NVIDIA
+A10G GPU, consistent with the AWS \texttt{g5.2xlarge} hardware target
+used throughout the project. This is a realistic setting for
+model-serving experiments because it forces memory-efficient design
+decisions rather than relying on a very large accelerator.
+
+\subsubsection{4.2 Standard Speculative-Decoding
+Protocol}\label{42-standard-speculative-decoding-protocol}
+
+The completed standard speculative benchmark for pair \texttt{F} used:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \texttt{\textbackslash{}gamma\ \textbackslash{}in\ \textbackslash{}\{1,\ 3,\ 5,\ 7,\ 10\textbackslash{}\}};
+\item
+  \texttt{temperature\ \textbackslash{}in\ \textbackslash{}\{0.0,\ 0.6,\ 1.0\textbackslash{}\}};
+\item
+  \texttt{4} tasks;
+\item
+  \texttt{50} prompts per configuration;
+\item
+  \texttt{128} maximum generated tokens;
+\item
+  \texttt{3} warm-up generations before measurement.
+\end{enumerate}
+
+This yields \texttt{60} speculative configurations and \texttt{12}
+matching baselines, for \texttt{72} saved rows in the completed summary
+file.
+
+\subsubsection{4.3 EAGLE-3 Training
+Protocol}\label{43-eagle-3-training-protocol}
+
+The completed EAGLE-3 training run used:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \texttt{google/gemma-3-12b-it} as a frozen 4-bit target;
+\item
+  the Alpaca-GPT4 instruction dataset described in Section 2.2;
+\item
+  BF16 mixed precision for the trainable head;
+\item
+  8-bit AdamW when available;
+\item
+  gradient accumulation and gradient clipping;
+\item
+  periodic checkpointing every \texttt{500} steps.
+\end{enumerate}
+
+The finished log shows that the run resumed from \texttt{step5000} and
+completed at \texttt{step19503}. The active GPU training time across the
+two logged sessions was \texttt{36.98} hours.
+
+\subsubsection{4.4 EAGLE-3 Evaluation
+Protocol}\label{44-eagle-3-evaluation-protocol}
+
+The completed EAGLE-3 inference sweep used:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \texttt{tree\_budget\ \textbackslash{}in\ \textbackslash{}\{20,\ 60\textbackslash{}\}};
+\item
+  \texttt{temperature\ \textbackslash{}in\ \textbackslash{}\{0.0,\ 0.6,\ 1.0\textbackslash{}\}};
+\item
+  the same \texttt{4} evaluation tasks;
+\item
+  \texttt{50} prompts per configuration;
+\item
+  \texttt{128} maximum generated tokens;
+\item
+  \texttt{3} warm-up generations before measurement.
+\end{enumerate}
+
+This yields \texttt{24} EAGLE configurations and \texttt{12} matching
+baselines, for \texttt{36} rows in the finished summary file.
+
+The long-context \texttt{cnn\_dailymail} cases were particularly
+important because they stress KV-cache management. The targeted rerun
+log for the \texttt{cnn\_dailymail} fix shows that the implementation
+can fall back to uncached verification when cache-shape mismatches
+occur. This fallback preserves correctness but reduces speed, which
+becomes relevant in the final results.
+
+\subsubsection{4.5 Performance Criteria and Correctness
+Checks}\label{45-performance-criteria-and-correctness-checks}
+
+The project evaluated performance primarily as a systems problem. The
+two main metrics were tokens per second and speedup over the matching
+baseline:
+
+\[TPS = \frac{\text{total generated tokens}}{\text{wall-clock time}}\]
+
+\[Speedup = \frac{TPS_{\text{accelerated}}}{TPS_{\text{baseline}}}\]
+
+The code also logged:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  time to first token (TTFT),
+\item
+  mean acceptance rate,
+\item
+  mean acceptance length,
+\item
+  draft-overhead ratio,
+\item
+  peak VRAM.
+\end{enumerate}
+
+In addition to these metrics, the codebase includes correctness and
+smoke-test scripts. The standard speculative module includes unit tests
+and greedy-equivalence tests. The EAGLE module includes unit tests for
+tree logic and smoke tests for the active pair \texttt{I}. The final
+report emphasizes the completed benchmark outputs, but these tests were
+useful for ensuring the accelerators were not simply fast because they
+were broken.
+
+\subsection{5. Hyperparameter Search, Overfitting, and Extrapolation
+Control}\label{5-hyperparameter-search-overfitting-and-extrapolation-control}
+
+\subsubsection{5.1 Searched
+Hyperparameters}\label{51-searched-hyperparameters}
+
+The searched hyperparameters were different for the two modules.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Module & Searched hyperparameters & Values \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Standard speculative decoding & Speculation length
+\texttt{\textbackslash{}gamma} & \texttt{1,\ 3,\ 5,\ 7,\ 10} \\
+Standard speculative decoding & Temperature &
+\texttt{0.0,\ 0.6,\ 1.0} \\
+EAGLE-3 inference & Tree budget & \texttt{20,\ 60} \\
+EAGLE-3 inference & Temperature & \texttt{0.0,\ 0.6,\ 1.0} \\
+\end{longtable}
+}
+
+The EAGLE-3 training run did not perform a large hyperparameter sweep
+because training even a lightweight draft head on Gemma-3-12B is
+expensive. Instead, one practical configuration was chosen and monitored
+carefully.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+EAGLE-3 training setting & Active value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Learning rate & \texttt{3e-4} \\
+Batch size & \texttt{1} \\
+Gradient accumulation & \texttt{8} \\
+Weight decay & \texttt{0.01} \\
+Max sequence length & \texttt{512} \\
+Multi-step horizon \texttt{K} & \texttt{5} \\
+Multi-step decay \texttt{\textbackslash{}lambda} & \texttt{0.8} \\
+\end{longtable}
+}
+
+\subsubsection{5.2 Overfitting Prevention and
+Detection}\label{52-overfitting-prevention-and-detection}
+
+Overfitting affects the two modules differently.
+
+For standard speculative decoding, there is no trainable component, so
+overfitting in the usual supervised-learning sense does not apply. The
+main concern is draft-target mismatch rather than training-set
+memorization.
+
+For EAGLE-3 training, the project used several practical controls:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  weight decay and gradient clipping to reduce unstable parameter
+  growth;
+\item
+  warmup and cosine decay to stabilize optimization;
+\item
+  periodic checkpoints so runs could be resumed rather than restarted;
+\item
+  evaluation on four held-out benchmark datasets that differ
+  substantially from Alpaca-GPT4.
+\end{enumerate}
+
+The project did not run a separate validation-perplexity study for the
+draft head. That is a real limitation. Overfitting detection therefore
+relied on two signals: the smooth downward training-loss curve and the
+fact that downstream inference was evaluated on held-out tasks from a
+different data distribution.
+
+\subsubsection{5.3 Extrapolation and Compounding-Error
+Control}\label{53-extrapolation-and-compounding-error-control}
+
+Extrapolation is especially important for acceleration methods because
+both the draft model and the EAGLE draft head are asked to predict
+future tokens before the target model sees them.
+
+The project addressed this in different ways:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Standard speculative decoding uses target-model verification at every
+  round. Poor draft proposals can be rejected immediately.
+\item
+  EAGLE-3 uses a multi-step KL objective so the head learns to recover
+  after its own predictions are fed back in future steps.
+\item
+  The EAGLE implementation includes a long-context fallback path that
+  switches to uncached verification when KV-cache trimming becomes
+  unreliable.
+\end{enumerate}
+
+This last point matters in practice. The \texttt{cnn\_dailymail} rerun
+log shows frequent uncached-fallback warnings at long contexts. The
+fallback preserves functional correctness, but it also explains part of
+the throughput loss on summarization tasks.
+
+\subsection{6. Results}\label{6-results}
+
+\subsubsection{6.1 Standard Speculative-Decoding
+Results}\label{61-standard-speculative-decoding-results}
+
+The completed pair \texttt{F} benchmark is the strongest finished
+standard speculative artifact in the repository and serves as the main
+evidence for Module 1.
+
+Table 1 summarizes the best speculative configuration for each task
+together with the matching baseline.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lllllllll@{}}
+\toprule\noalign{}
+Task & Matching baseline TPS & Best speculative config & Best
+speculative TPS & Speedup & Mean acceptance rate & Baseline TTFT (ms) &
+Best TTFT (ms) & Peak VRAM (GB) \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{humaneval} & 9.63 & \texttt{\textbackslash{}gamma\ =\ 10},
+\texttt{T\ =\ 0.0} & 14.22 & 1.476 & 0.9279 & 179.12 & 555.24 & 9.40 \\
+\texttt{triviaqa} & 9.63 & \texttt{\textbackslash{}gamma\ =\ 5},
+\texttt{T\ =\ 0.0} & 12.47 & 1.295 & 0.8751 & 134.99 & 320.48 & 9.31 \\
+\texttt{cnn\_dailymail} & 9.34 & \texttt{\textbackslash{}gamma\ =\ 1},
+\texttt{T\ =\ 0.0} & 8.30 & 0.889 & 0.5342 & 462.10 & 525.01 & 9.77 \\
+\texttt{writingprompts} & 9.68 & \texttt{\textbackslash{}gamma\ =\ 1},
+\texttt{T\ =\ 0.0} & 8.43 & 0.871 & 0.4525 & 142.32 & 180.03 & 9.32 \\
+\end{longtable}
+}
+
+The main conclusion from Table 1 is that pair \texttt{F} is useful but
+not universally useful. It produces strong gains on \texttt{humaneval}
+and \texttt{triviaqa}, but not on \texttt{cnn\_dailymail} or
+\texttt{writingprompts}.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/speculative_pair_f_speedup_vs_gamma.png}}
+
+Figure 4 shows that speedup improves with larger
+\texttt{\textbackslash{}gamma} only when draft-target agreement remains
+strong. For \texttt{humaneval}, speedup increases steadily up to
+\texttt{1.476x} at \texttt{\textbackslash{}gamma\ =\ 10}. For
+\texttt{triviaqa}, the optimum occurs earlier at
+\texttt{\textbackslash{}gamma\ =\ 5}. In contrast,
+\texttt{cnn\_dailymail} and \texttt{writingprompts} degrade as
+\texttt{\textbackslash{}gamma} increases because more aggressive
+speculative proposals produce too much verification waste.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/speculative_pair_f_acceptance_heatmap.png}}
+
+Figure 5 explains the pattern in Figure 4. Acceptance is consistently
+high on \texttt{humaneval} and \texttt{triviaqa}, especially at larger
+\texttt{\textbackslash{}gamma}, but substantially lower on
+\texttt{cnn\_dailymail} and \texttt{writingprompts}. The strongest
+speedups occur where acceptance is both high and stable. Low acceptance
+does not simply reduce marginal gains; it can erase them entirely.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/speculative_pair_f_best_vs_baseline.png}}
+
+Figure 6 shows the central trade-off of standard speculative decoding.
+The same settings that improve throughput also increase first-token
+latency. The gain on \texttt{humaneval} and \texttt{triviaqa} is real
+and substantial, but it comes with noticeably worse TTFT. This means
+pair \texttt{F} is more attractive for long-form or sustained generation
+than for applications where first-token responsiveness is the primary
+objective.
+
+Across the full finished sweep, peak VRAM remained below
+\texttt{10\ GB}, so pair \texttt{F} is operationally lightweight on an
+A10G. This is an important positive result: even though speculative
+decoding is not beneficial on every task, the cost of trying it on
+Gemma-3-12B is modest from a memory perspective.
+
+\subsubsection{6.2 EAGLE-3 Training
+Results}\label{62-eagle-3-training-results}
+
+The EAGLE-3 training artifacts provide a clear record of successful
+optimization rather than an incomplete training attempt.
+
+Table 2 summarizes the completed run.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Item & Observed value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Target model & \texttt{google/gemma-3-12b-it} \\
+Logged hardware & \texttt{NVIDIA\ A10G} \\
+Prepared training examples & \texttt{52,002} \\
+Trainable parameters & \texttt{297,876,992} \\
+Optimizer & 8-bit AdamW \\
+Final checkpoint step & \texttt{19,503} \\
+Resume point & \texttt{step5000} \\
+Active GPU training time & \texttt{36.98} hours \\
+Final checkpoint & \texttt{eagle3\_gemma3\_12b\_final.pt} \\
+\end{longtable}
+}
+
+Selected loss milestones are shown in Table 3.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Milestone & Loss \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Step 10 & 145.2908 \\
+Step 100 & 21.2564 \\
+Step 500 & 9.7899 \\
+Epoch 1 average loss & 1.8044 \\
+Epoch 2 average loss & 1.2272 \\
+Step 19,000 & 0.7941 \\
+Epoch 3 average loss & 0.8095 \\
+\end{longtable}
+}
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle3_training_loss.png}}
+
+Figure 7 shows a very steep initial loss drop followed by a long
+convergence tail. This is the behavior expected from a large supervised
+approximation problem: the head quickly learns coarse alignment with the
+target distribution and then spends most of the remaining optimization
+budget improving fine-grained agreement. The end of the run remains well
+below \texttt{1.0} average loss, which is strong evidence that the head
+became a useful proposal mechanism rather than a random extrapolator.
+
+The training result is important because it establishes that the project
+did not stop at benchmarking a training-free baseline. The EAGLE-3
+module was trained end to end, resumed successfully after an
+interruption, and finished with a saved final checkpoint.
+
+\subsubsection{6.3 EAGLE-3 Inference
+Results}\label{63-eagle-3-inference-results}
+
+The completed EAGLE-3 inference sweep provides a full task-by-task
+comparison against matching baselines. Table 4 summarizes the best EAGLE
+configuration for each task.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llllllllll@{}}
+\toprule\noalign{}
+Task & Best tree budget & Best temperature & Matching baseline TPS &
+Best EAGLE TPS & Speedup & Mean acceptance rate & Matching baseline TTFT
+(ms) & Best EAGLE TTFT (ms) & Best EAGLE peak VRAM (GB) \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{humaneval} & 20 & 1.0 & 8.52 & 7.61 & 0.893 & 0.0974 & 203.77 &
+202.53 & 8.29 \\
+\texttt{triviaqa} & 20 & 0.0 & 8.82 & 20.87 & 2.368 & 0.8977 & 162.03 &
+162.60 & 8.11 \\
+\texttt{cnn\_dailymail} & 20 & 0.6 & 8.30 & 6.03 & 0.727 & 0.0803 &
+475.55 & 476.55 & 9.25 \\
+\texttt{writingprompts} & 20 & 0.0 & 8.27 & 8.01 & 0.969 & 0.2206 &
+172.87 & 169.72 & 8.39 \\
+\end{longtable}
+}
+
+Table 4 shows a much more uneven task profile than the training-loss
+curve alone would suggest. \texttt{triviaqa} is an excellent fit for the
+trained EAGLE-3 head, but \texttt{humaneval}, \texttt{cnn\_dailymail},
+and \texttt{writingprompts} remain below or near baseline.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle3_final_speedup_heatmap.png}}
+
+Figure 8 makes the task dependence of EAGLE-3 especially clear.
+\texttt{triviaqa} is the standout case, peaking at \texttt{2.368x}
+speedup for \texttt{tree\_budget\ =\ 20} and
+\texttt{temperature\ =\ 0.0}. \texttt{writingprompts} comes close to
+parity, \texttt{humaneval} improves somewhat at higher temperatures but
+remains below \texttt{1.0x}, and \texttt{cnn\_dailymail} remains well
+below baseline throughout the sweep.
+
+An additional practical finding from Figure 8 is that
+\texttt{tree\_budget\ =\ 20} outperforms \texttt{tree\_budget\ =\ 60}
+for every task\textquotesingle s best finished result. Larger trees did
+not help once verification cost was included.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle3_final_acceptance_heatmap.png}}
+
+Figure 9 explains why \texttt{triviaqa} is the only task with a large
+EAGLE speedup. Its acceptance rate is far higher than the other tasks,
+especially at low temperature. \texttt{humaneval} is the opposite
+extreme: it achieves very low acceptance even when its TTFT remains
+competitive with baseline. \texttt{cnn\_dailymail} and
+\texttt{writingprompts} sit in the middle but do not maintain enough
+agreement to overcome verification overhead.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle3_best_vs_baseline_tps.png}}
+
+Figure 10 provides the clearest direct comparison between EAGLE and
+baseline throughput. The \texttt{triviaqa} improvement is not marginal;
+it is the dominant success case of the entire EAGLE study. At the same
+time, the figure also shows that the method should not be treated as
+uniformly beneficial. The same draft head that works extremely well on
+\texttt{triviaqa} is a net slowdown on summarization.
+
+\pandocbounded{\includegraphics[keepaspectratio,alt={}]{C:/Users/venka/OneDrive/Desktop/Class/6312/Final Project/Final-Group-Project-Report/assets/eagle3_best_ttft_vram.png}}
+
+Figure 11 shows that the best EAGLE configurations remain practical from
+a deployment perspective. TTFT stays in roughly the same scale as
+baseline for all tasks, and peak VRAM remains in the \texttt{8.11} to
+\texttt{9.25\ GB} range. The slowdown on \texttt{cnn\_dailymail} is
+therefore not a memory-capacity issue. It is primarily an
+acceptance-and-verification issue, made worse by long-context fallback
+behavior.
+
+The targeted \texttt{cnn\_dailymail} rerun log supports this
+interpretation. It shows repeated uncached-verification warnings at long
+contexts, followed by successful completion. In other words, the current
+implementation prioritizes correctness and robustness over raw speed
+when the cache path becomes unreliable. This is the right engineering
+choice, but it also explains why summarization remains the hardest case.
+
+\subsection{7. Summary and Conclusions}\label{7-summary-and-conclusions}
+
+This project produced two useful and complementary conclusions about
+inference acceleration for Gemma-3-12B.
+
+First, standard speculative decoding with a separate small draft model
+is already effective on some tasks. Pair \texttt{F} achieved the
+strongest finished result in the repository on \texttt{humaneval}, where
+the best configuration reached \texttt{1.476x} speedup, and it also
+improved \texttt{triviaqa} to \texttt{1.295x}. These gains were strongly
+correlated with high acceptance rates. However, the same method slowed
+down \texttt{cnn\_dailymail} and \texttt{writingprompts}, demonstrating
+that speculative decoding is only worthwhile when the draft model tracks
+the target closely enough.
+
+Second, the EAGLE-3 draft-head approach is viable and can outperform
+standard drafting on selected tasks while using only the target model
+and a lightweight learned head. The completed training run converged
+successfully, produced a final checkpoint, and yielded a striking
+\texttt{2.368x} speedup on \texttt{triviaqa}. That is the best
+acceleration result in the entire project. At the same time, the EAGLE
+results also show that a trained hidden-state extrapolator is not
+universally strong across domains. Long-context summarization remains
+difficult, and low-acceptance tasks still pay too much verification
+overhead.
+
+The most important lessons from the project are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  draft-target agreement is the dominant driver of speedup;
+\item
+  throughput gains and first-token latency do not necessarily improve
+  together;
+\item
+  a lightweight learned draft head can be more effective than a separate
+  draft model on the right task;
+\item
+  cache management and long-context robustness matter as much as the
+  nominal decoding algorithm;
+\item
+  realistic GPU-memory limits force design choices that are central
+  rather than incidental.
+\end{enumerate}
+
+The most natural future improvements are:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  adding a validation-driven EAGLE training study rather than relying on
+  one production training configuration;
+\item
+  improving long-context verification so \texttt{cnn\_dailymail} does
+  not rely on slow fallback behavior;
+\item
+  investigating whether task-adaptive tree budgets or confidence
+  thresholds can improve EAGLE robustness;
+\item
+  expanding pair-\texttt{F} style speculative experiments with more
+  systematically matched draft models.
+\end{enumerate}
+
+Overall, the project shows that Gemma-3-12B inference can be accelerated
+substantially, but only when the proposal mechanism matches the task
+structure. There is no single universally best accelerator. Instead, the
+finished experiments support a more nuanced conclusion: standard
+speculative decoding is a practical low-risk baseline, while EAGLE-3
+offers the most exciting upside when the hidden-state extrapolator is
+well aligned with the target distribution.
+
+\subsection{8. References}\label{8-references}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Leviathan, Y., Kalman, M., and Matias, Y. \emph{Fast Inference from
+  Transformers via Speculative Decoding.} ICML 2023.
+  \url{https://arxiv.org/abs/2302.01318}
+\item
+  Li, Y., Wei, F., Zhang, C., and Zhang, H. \emph{EAGLE: Speculative
+  Sampling Requires Rethinking Feature Uncertainty.} ICML 2024.
+  \url{https://arxiv.org/abs/2401.15077}
+\item
+  Gemma Team. \emph{Gemma 3 Technical Report.} Google DeepMind, 2025.
+  \url{https://storage.googleapis.com/deepmind-media/gemma/Gemma3Report.pdf}
+\item
+  SafeAILab EAGLE repository. \url{https://github.com/SafeAILab/EAGLE}
+\item
+  PyTorch repository. \url{https://github.com/pytorch/pytorch}
+\item
+  Hugging Face Transformers repository.
+  \url{https://github.com/huggingface/transformers}
+\item
+  bitsandbytes repository.
+  \url{https://github.com/bitsandbytes-foundation/bitsandbytes}
+\item
+  Streamlit repository. \url{https://github.com/streamlit/streamlit}
+\item
+  Hugging Face model card: \texttt{google/gemma-3-1b-it}.
+  \url{https://huggingface.co/google/gemma-3-1b-it}
+\item
+  Hugging Face model card: \texttt{google/gemma-3-12b-it}.
+  \url{https://huggingface.co/google/gemma-3-12b-it}
+\item
+  Hugging Face dataset: \texttt{openai/openai\_humaneval}.
+  \url{https://huggingface.co/datasets/openai/openai_humaneval}
+\item
+  Hugging Face dataset: \texttt{mandarjoshi/trivia\_qa}.
+  \url{https://huggingface.co/datasets/mandarjoshi/trivia_qa}
+\item
+  Hugging Face dataset: \texttt{abisee/cnn\_dailymail}.
+  \url{https://huggingface.co/datasets/abisee/cnn_dailymail}
+\item
+  Hugging Face dataset: \texttt{euclaise/writingprompts}.
+  \url{https://huggingface.co/datasets/euclaise/writingprompts}
+\item
+  Hugging Face dataset: \texttt{vicgalle/alpaca-gpt4}.
+  \url{https://huggingface.co/datasets/vicgalle/alpaca-gpt4}
+\end{enumerate}
+
+\end{document}
