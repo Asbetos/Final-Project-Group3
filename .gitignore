@@ -64,3 +64,7 @@ docs/
 # sweep_standard.log
 Code/eagle3-gemma3-12B/checkpoints/eagle3/gemma3_12b/*.pt
 
+# Large log files
+*.log
+Code/eagle3-gemma3-12B/*.log
+
