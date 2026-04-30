@@ -1,0 +1,13 @@
+pair_id,task,gamma,temperature,is_baseline,mean_tps,std_tps,p95_tps,mean_acceptance_rate,mean_acceptance_length,mean_ttft_ms,mean_peak_vram_gb,mean_draft_overhead,speedup,tree_budget,is_eagle3
+I,humaneval,0,0.0,True,9.71,0.04,9.76,1.0,1.0,179.32,8.02,0.0,1.0,,
+I,triviaqa,0,0.0,True,9.76,0.01,9.78,1.0,1.0,135.05,7.96,0.0,1.0,,
+I,cnn_dailymail,0,0.0,True,9.41,0.27,9.65,1.0,1.0,462.26,8.45,0.0,1.0,,
+I,writingprompts,0,0.0,True,9.76,0.02,9.78,1.0,1.0,142.39,7.96,0.0,1.0,,
+I,humaneval,0,0.0,False,7.28,0.47,8.31,0.0315,0.04,179.57,8.1,0.14,0.749,20,True
+I,triviaqa,0,0.0,False,24.94,1.46,26.78,0.974,5.21,135.44,8.01,0.1399,2.554,20,True
+I,cnn_dailymail,0,0.0,False,8.13,0.86,9.6,0.2856,0.41,462.52,8.69,0.1344,0.864,20,True
+I,writingprompts,0,0.0,False,7.21,0.07,7.37,0.0123,0.01,142.72,8.02,0.1403,0.739,20,True
+I,humaneval,0,0.0,False,7.26,0.47,8.29,0.0315,0.04,179.57,8.1,0.1398,0.748,60,True
+I,triviaqa,0,0.0,False,24.73,1.43,26.33,0.974,5.21,135.45,8.01,0.1387,2.533,60,True
+I,cnn_dailymail,0,0.0,False,8.13,0.86,9.6,0.2856,0.41,462.51,8.69,0.1343,0.864,60,True
+I,writingprompts,0,0.0,False,7.2,0.07,7.36,0.0123,0.01,142.73,8.02,0.1402,0.738,60,True
