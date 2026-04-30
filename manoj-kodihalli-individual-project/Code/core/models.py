@@ -1,0 +1,214 @@
+"""Model loading, tokenizer setup, and VRAM management."""
+
+import gc
+import logging
+import os
+
+import torch
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+try:
+    from transformers import AutoModelForImageTextToText
+except ImportError:  # pragma: no cover - older transformers fallback
+    AutoModelForImageTextToText = None
+
+from core.config import Eagle3PairConfig, ModelPairConfig
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# CUDA GPU optimizations — enable TF32 for any stray FP32 matmuls
+# ---------------------------------------------------------------------------
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
+
+def get_device() -> torch.device:
+    """Return the CUDA device, raising if no GPU is available."""
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA GPU required but not available")
+    return torch.device("cuda:0")
+
+
+def load_tokenizer(model_id: str) -> AutoTokenizer:
+    """Load the tokenizer for the requested model id."""
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    return tokenizer
+
+
+def load_model(
+    model_id: str,
+    quantize_4bit: bool = False,
+    device: torch.device = None,
+    compile_model: bool = True,
+) -> torch.nn.Module:
+    """
+    Load a single target model for inference or EAGLE-3 training.
+
+    Args:
+        model_id: HuggingFace model identifier.
+        quantize_4bit: If True, apply NF4 4-bit quantization via bitsandbytes.
+        device: Target device (defaults to cuda:0).
+
+    Returns:
+        The loaded model in eval mode with gradients disabled.
+    """
+    device = device or get_device()
+
+    load_kwargs = dict(
+        trust_remote_code=True,
+        dtype=torch.bfloat16,
+        attn_implementation="sdpa",
+    )
+
+    if quantize_4bit:
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+        load_kwargs["quantization_config"] = bnb_config
+        load_kwargs["device_map"] = {"": device}
+        # Use meta-device init + streamed weight load. Avoids a full CPU copy
+        # of the model during from_pretrained. Required for loading 31B-scale
+        # models on systems with limited RAM / no swap.
+        load_kwargs["low_cpu_mem_usage"] = True
+
+    logger.info("Loading model %s (4-bit=%s) ...", model_id, quantize_4bit)
+
+    # Replace transformers' safetensors loader with a non-mmap variant.
+    # Required on memory-constrained systems (e.g. 30GB RAM + no swap)
+    # where `mmap()` on the 46GB shard of Gemma 4 31B is rejected by the
+    # kernel's heuristic overcommit even though mmap pages are backed by
+    # disk, not RAM. Reads via os.pread() bypass that limit.
+    from core.safetensors_nommap import patch_transformers_safetensors_loader
+    patch_transformers_safetensors_loader()
+
+    model_config = AutoConfig.from_pretrained(model_id, trust_remote_code=True)
+    architectures = getattr(model_config, "architectures", []) or []
+    is_conditional_generation = any(
+        "ConditionalGeneration" in architecture for architecture in architectures
+    )
+    model_cls = AutoModelForCausalLM
+    if is_conditional_generation and AutoModelForImageTextToText is not None:
+        model_cls = AutoModelForImageTextToText
+
+    model = model_cls.from_pretrained(model_id, **load_kwargs)
+
+    if not quantize_4bit:
+        model = model.to(device=device, dtype=torch.bfloat16)
+
+    model.eval()
+
+    # torch.compile disabled — CUDA graphs conflict with dynamic KV cache
+    # in transformers 5.x + PyTorch 2.4. SDPA on modern GPUs is already fast.
+    if False and compile_model:
+        logger.info("Compiling model %s with torch.compile ...", model_id)
+        model = torch.compile(model, mode="reduce-overhead")
+
+    vram_gb = torch.cuda.memory_allocated() / (1024 ** 3)
+    logger.info("Model %s loaded. VRAM allocated: %.2f GB", model_id, vram_gb)
+
+    return model
+
+
+def load_model_pair(pair: ModelPairConfig):
+    """
+    Load target model, draft model, and shared tokenizer for a given pair.
+
+    Returns:
+        (target_model, draft_model, tokenizer)
+    """
+    logger.info("Loading model pair %s ...", pair.pair_id)
+
+    tokenizer = load_tokenizer(pair.target_model_id)
+
+    # Load target first (larger) — fail fast on OOM
+    target_model = load_model(
+        pair.target_model_id,
+        quantize_4bit=pair.target_quantize_4bit,
+    )
+    target_vram = torch.cuda.memory_allocated() / (1024 ** 3)
+
+    draft_model = load_model(pair.draft_model_id, quantize_4bit=pair.draft_quantize_4bit)
+    total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
+
+    logger.info(
+        "Pair %s loaded. Target VRAM: %.2f GB, Total VRAM: %.2f GB",
+        pair.pair_id,
+        target_vram,
+        total_vram,
+    )
+
+    return target_model, draft_model, tokenizer
+
+
+def load_eagle3_pair(pair: Eagle3PairConfig):
+    """
+    Load target model, EAGLE-3 draft head, config, and tokenizer.
+
+    Returns:
+        (target_model, draft_head, eagle3_config, tokenizer)
+    """
+    from core.eagle3 import Eagle3Config, Eagle3DraftHead
+    from core.eagle3_train import load_checkpoint
+
+    logger.info("Loading EAGLE-3 pair %s ...", pair.pair_id)
+
+    tokenizer = load_tokenizer(pair.target_model_id)
+
+    # Load target model (compile disabled initially — need hidden states access)
+    target_model = load_model(
+        pair.target_model_id,
+        quantize_4bit=pair.target_quantize_4bit,
+        compile_model=False,
+    )
+
+    # Derive draft head config from the loaded target model so architecture
+    # dimensions (hidden_size, vocab_size, head_dim, etc.) are always correct
+    # regardless of which Gemma text stack is wrapped by the loaded model.
+    eagle3_config = Eagle3Config.from_model(
+        target_model,
+        tree_budget=pair.tree_budget,
+        max_depth=pair.max_depth,
+        top_k=pair.top_k,
+    )
+
+    draft_head = Eagle3DraftHead(eagle3_config, target_model)
+    device = get_device()
+    draft_head = draft_head.to(device=device, dtype=torch.bfloat16)
+
+    if pair.checkpoint_path and os.path.exists(pair.checkpoint_path):
+        load_checkpoint(draft_head, pair.checkpoint_path)
+        logger.info("Loaded EAGLE-3 checkpoint: %s", pair.checkpoint_path)
+    else:
+        raise FileNotFoundError(
+            f"EAGLE-3 checkpoint not found at '{pair.checkpoint_path}'. "
+            f"Run scripts/eagle3_train.py first, or set EAGLE3_GEMMA4_CHECKPOINT "
+            f"(or EAGLE3_CHECKPOINT) in the environment. "
+            f"CWD={os.getcwd()}"
+        )
+
+    draft_head.eval()
+
+    # torch.compile disabled — see note in load_model()
+    # draft_head = torch.compile(draft_head, mode="reduce-overhead")
+
+    total_vram = torch.cuda.memory_allocated() / (1024 ** 3)
+    logger.info("EAGLE-3 pair %s loaded. Total VRAM: %.2f GB", pair.pair_id, total_vram)
+
+    return target_model, draft_head, eagle3_config, tokenizer
+
+
+def unload_models(*models) -> None:
+    """Delete models and free GPU memory."""
+    for model in models:
+        del model
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
+    logger.info("Models unloaded. VRAM freed.")
